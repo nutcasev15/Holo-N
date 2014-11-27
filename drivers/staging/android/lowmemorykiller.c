@@ -91,6 +91,9 @@ static int lowmem_shrink(struct shrinker *s, struct shrink_control *sc)
 
 	int dma32_free = 0, dma32_file = 0;
 	struct zone *zone;
+#ifdef CONFIG_SWAP
+	other_file -= total_swapcache_pages();
+#endif
 
 	if (lowmem_adj_size < array_size)
 		array_size = lowmem_adj_size;
@@ -177,6 +180,9 @@ static int lowmem_shrink(struct shrinker *s, struct shrink_control *sc)
 			continue;
 		}
 		tasksize = get_mm_rss(p->mm);
+#ifdef CONFIG_SWAP
+		tasksize += get_mm_counter(p->mm, MM_SWAPENTS);
+#endif
 		task_unlock(p);
 		if (tasksize <= 0)
 			continue;
