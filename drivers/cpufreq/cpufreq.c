@@ -1025,6 +1025,19 @@ static int __cpufreq_add_dev(struct device *dev, struct subsys_interface *sif,
 		pr_debug("Restoring governor %s for cpu %d\n",
 		       policy->governor->name, cpu);
 	}
+
+	if (per_cpu(cpufreq_policy_ref, cpu).min) {
+		policy->min = per_cpu(cpufreq_policy_ref, cpu).min;
+		policy->user_policy.min = policy->min;
+	}
+
+	if (per_cpu(cpufreq_policy_ref, cpu).max) {
+		policy->max = per_cpu(cpufreq_policy_ref, cpu).max;
+		policy->user_policy.max = policy->max;
+	}
+
+	pr_debug("Restoring CPU%d min %d and max %d\n",
+		cpu, policy->min, policy->max);
 #endif
 
 	write_lock_irqsave(&cpufreq_driver_lock, flags);
