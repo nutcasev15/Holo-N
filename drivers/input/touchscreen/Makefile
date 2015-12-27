@@ -77,5 +77,6 @@ obj-$(CONFIG_TOUCHSCREEN_SYNAPTICS_DSX_I2C_DELUXE) += synaptics_dsx_i2c.o
 obj-$(CONFIG_TOUCHSCREEN_SYNAPTICS_DSX_CORE_DELUXE) += synaptics_dsx_core.o
 obj-$(CONFIG_TOUCHSCREEN_SYNAPTICS_DSX_RMI_DEV_DELUXE) += synaptics_dsx_rmi_dev.o
 obj-$(CONFIG_TOUCHSCREEN_SYNAPTICS_DSX_FW_UPDATE_DELUXE) += synaptics_dsx_fw_update.o
+obj-$(CONFIG_SWEEP2SLEEP)		+= sweep2sleep.o
 obj-$(CONFIG_TOUCHSCREEN_FTXXXX) += ftxxxx.o 
 ftxxxx-objs += ftxxxx_ts.o ftxxxx_ex_fun.o focaltech_ctl.o test_lib.o ini.o
