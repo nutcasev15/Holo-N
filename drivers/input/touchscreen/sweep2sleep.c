@@ -57,7 +57,7 @@ MODULE_LICENSE("GPLv2");
 /* Variables, structures and pointers */
 /*****************************************/
 
-int s2s = 0;
+int s2s = 1;
 int is_ze550ml = 0;
 int y_boundary = 1920; //y value for ZE551ML
 int x_boundary = 1080; //x value for ZE551ML
