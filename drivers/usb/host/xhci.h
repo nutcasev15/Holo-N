@@ -287,6 +287,7 @@ struct xhci_op_regs {
 #define XDEV_U3		(0x3 << 5)
 #define XDEV_COMP	(0xa << 5)
 #define XDEV_LOOPBACK	(0xb << 5)
+#define XDEV_INACTIVE	(0x6 << 5)
 #define XDEV_RESUME	(0xf << 5)
 /* true: port has power (see HCC_PPC) */
 #define PORT_POWER	(1 << 9)
