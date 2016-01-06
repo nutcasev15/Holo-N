@@ -441,7 +441,7 @@ gmbus_xfer(struct i2c_adapter *adapter,
 					       struct intel_gmbus,
 					       adapter);
 	struct drm_i915_private *dev_priv = bus->dev_priv;
-	int i, reg_offset;
+	int i = 0, inc, try = 0, reg_offset;
 	int ret = 0;
 
 	intel_aux_display_runtime_get(dev_priv);
@@ -454,12 +454,14 @@ gmbus_xfer(struct i2c_adapter *adapter,
 
 	reg_offset = dev_priv->gpio_mmio_base;
 
+retry:
 	I915_WRITE(GMBUS0 + reg_offset, bus->reg0);
 
-	for (i = 0; i < num; i++) {
+	for (; i < num; i += inc) {
+		inc = 1;
 		if (gmbus_is_index_read(msgs, i, num)) {
 			ret = gmbus_xfer_index_read(dev_priv, &msgs[i]);
-			i += 1;  /* set i to the index of the read xfer */
+			inc = 2; /* an index read is two msgs */
 		} else if (msgs[i].flags & I2C_M_RD) {
 			ret = gmbus_xfer_read(dev_priv, &msgs[i], 0);
 		} else {
