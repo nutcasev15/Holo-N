@@ -65,8 +65,9 @@
 #include <linux/usb/penwell_otg.h>
 #include <linux/HWVersion.h>
 #include "pmic_ccsm.h"
-#if defined(CONFIG_SMB1357_CHARGER)
+#if defined(CONFIG_A500CG_BATTERY_SMB347) || defined(CONFIG_SMB1357_CHARGER)
 #include "../../../power/ASUS_BATTERY/smb_external_include.h"
+
 extern int dcp_mode;
 extern int invalid_charger;
 #endif
