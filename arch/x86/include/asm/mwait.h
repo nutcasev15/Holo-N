@@ -13,4 +13,6 @@
 
 #define MWAIT_ECX_INTERRUPT_BREAK	0x1
 
+void mwait_idle_with_hints(unsigned int eax, unsigned int ecx);
+
 #endif /* _ASM_X86_MWAIT_H */
