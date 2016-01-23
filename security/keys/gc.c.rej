@@ -1,0 +1,13 @@
+--- security/keys/gc.c
++++ security/keys/gc.c
+@@ -207,10 +213,6 @@
+ 		if (test_bit(KEY_FLAG_INSTANTIATED, &key->flags))
+ 			atomic_dec(&key->user->nikeys);
+ 
+-		/* now throw away the key memory */
+-		if (key->type->destroy)
+-			key->type->destroy(key);
+-
+ 		key_user_put(key->user);
+ 
+ 		kfree(key->description);
