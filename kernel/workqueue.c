@@ -274,13 +274,6 @@ module_param_named(disable_numa, wq_disable_numa, bool, 0444);
 
 static bool wq_numa_enabled;		/* unbound NUMA affinity enabled */
 
-#ifdef CONFIG_WQ_POWER_EFFICIENT
-static bool wq_power_efficient = true;
-#else
-static bool wq_power_efficient;
-#endif
-module_param_named(power_efficient, wq_power_efficient, bool, 0644);
-
 /* buf for wq_update_unbound_numa_attrs(), protected by CPU hotplug exclusion */
 static struct workqueue_attrs *wq_update_unbound_numa_attrs_buf;
 
@@ -315,7 +308,7 @@ static bool wq_power_efficient = true;
 static bool wq_power_efficient;
 #endif
 
-module_param_named(power_efficient, wq_power_efficient, bool, 0444);
+module_param_named(power_efficient, wq_power_efficient, bool, 0644);
 
 struct workqueue_struct *system_wq __read_mostly;
 EXPORT_SYMBOL(system_wq);
