@@ -5030,9 +5030,6 @@ static int __init xhci_hcd_init(void)
 	/* xhci_run_regs has eight fields and embeds 128 xhci_intr_regs */
 	BUILD_BUG_ON(sizeof(struct xhci_run_regs) != (8+8*128)*32/8);
 
-	if (usb_disabled())
-		return -ENODEV;
-
 	return 0;
 unreg_pci:
 	xhci_unregister_ush_pci();
