@@ -388,6 +388,7 @@ KBUILD_CFLAGS   := $(ANDROID_TOOLCHAIN_FLAGS) \
 		   -Wno-format-security -Wno-array-bounds -Wno-unused-variable -Wno-unused-function \
 		   -Wno-sequence-point \
 		   -Wno-switch \
+		   -march=silvermont -mtune=silvermont -msse4.2 \
 		   -Wno-switch-enum \
 		   -Wno-nonnull \
 		   -mstackrealign \
