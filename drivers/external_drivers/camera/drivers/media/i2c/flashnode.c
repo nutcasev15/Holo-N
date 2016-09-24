@@ -104,6 +104,43 @@
 #define flashnode_suspend NULL
 #define flashnode_resume  NULL
 
+
+enum flashnode_torch_current{
+	FLASHNODE_TORCH_CURRENT_25MA, //0
+	FLASHNODE_TORCH_CURRENT_50MA,
+	FLASHNODE_TORCH_CURRENT_75MA,
+	FLASHNODE_TORCH_CURRENT_100MA,
+	FLASHNODE_TORCH_CURRENT_125MA,
+	FLASHNODE_TORCH_CURRENT_150MA,
+	FLASHNODE_TORCH_CURRENT_175MA,
+	FLASHNODE_TORCH_CURRENT_200MA,
+	FLASHNODE_TORCH_CURRENT_225MA,
+	FLASHNODE_TORCH_CURRENT_250MA, // 9
+	FLASHNODE_TORCH_CURRENT_NUM,
+};
+
+
+int inline flashnode_mapping_torch_intensity_driver(int light_intensity_percentage){
+    int ret;
+    ret = FLASHNODE_TORCH_CURRENT_25MA;
+    if(light_intensity_percentage > 10)
+        ret = FLASHNODE_TORCH_CURRENT_25MA;
+    if(light_intensity_percentage > 20)
+        ret = FLASHNODE_TORCH_CURRENT_75MA;
+    if(light_intensity_percentage > 30)
+        ret = FLASHNODE_TORCH_CURRENT_125MA;
+    if(light_intensity_percentage > 40)
+        ret = FLASHNODE_TORCH_CURRENT_175MA;
+    if(light_intensity_percentage > 60)
+        ret = FLASHNODE_TORCH_CURRENT_200MA;
+    if(light_intensity_percentage > 80)
+    	ret = FLASHNODE_TORCH_CURRENT_225MA;
+	if(light_intensity_percentage > 90)
+    	ret = FLASHNODE_TORCH_CURRENT_225MA;
+    return ret;
+}
+
+
 struct flashnode {
 	struct v4l2_subdev sd;
 	struct mutex power_lock;
