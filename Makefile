@@ -241,8 +241,8 @@ CONFIG_SHELL := $(shell if [ -x "$$BASH" ]; then echo $$BASH; \
 
 HOSTCC       = $(CCACHE) gcc
 HOSTCXX      = $(CCACHE) g++
-HOSTCFLAGS   = -Wall -Wmissing-prototypes -Wstrict-prototypes -Ofast -ffast-math -fomit-frame-pointer -fgcse-las -std=gnu89
-HOSTCXXFLAGS = -Ofast -march=silvermont -mtune=silvermont -msse4.2 -mpopcnt -fgcse-las
+HOSTCFLAGS   = -Wall -Wmissing-prototypes -Wstrict-prototypes -Ofast -ffast-math -fomit-frame-pointer -fgcse-las -std=gnu89 -O3
+HOSTCXXFLAGS = -Ofast -march=silvermont -mtune=silvermont -msse4.2 -mpopcnt -fgcse-las -O3
 ifeq ($(ENABLE_GRAPHITE),true)
 HOSTCXXFLAGS += -fgraphite -floop-flatten -floop-parallelize-all -ftree-loop-linear -floop-strip-mine -floop-block -fgraphite-identity -floop-block -floop-strip-mine -ftree-loop-distribution -ftree-loop-linear
 HOSTCFLAGS += -fgraphite -floop-flatten -floop-parallelize-all -ftree-loop-linear -floop-strip-mine -floop-block -floop-block -floop-strip-mine -fgraphite-identity -ftree-loop-distribution -ftree-loop-linear -ffast-math
@@ -379,16 +379,20 @@ KBUILD_CFLAGS   := $(ANDROID_TOOLCHAIN_FLAGS) \
 		   -Werror-implicit-function-declaration -Wno-uninitialized \
 		   -Wno-format-security -Wno-array-bounds -Wno-unused-variable -Wno-unused-function \
 		   -Wno-sequence-point \
-		   -Wno-switch \
+		   -Wno-switch -fdiagnostics-color=always \
 		   -Wno-switch-enum \
-		   -fno-aggressive-loop-optimizations \
 		   -fno-delete-null-pointer-checks -fno-pic -Wno-maybe-uninitialized \
-		   -Wno-sizeof-pointer-memaccess \
- 		   -std=gnu89 \
+ 		   -std=gnu89 -ffloat-store -funsafe-math-optimizations \
 		   $(KERNEL_MODS)
 
 # L1/L2 cache size parameters
-KBUILD_CFLAGS	+= --param l1-cache-size=32 --param l1-cache-line-size=32 --param l2-cache-size=2048
+KBUILD_CFLAGS	+= --param l1-cache-size=32 --param l1-cache-line-size=32 --param l2-cache-size=2048 -fno-strict-aliasing -fno-common \
+		   -Werror-implicit-function-declaration \
+		   -Wno-format-security \
+		   -fno-delete-null-pointer-checks \
+		   -Wno-sizeof-pointer-memaccess \
+ 		   -std=gnu89 \
+		   $(KERNEL_MODS)
 
 KBUILD_AFLAGS_KERNEL :=
 KBUILD_CFLAGS_KERNEL :=
@@ -589,7 +593,7 @@ all: vmlinux
 ifdef CONFIG_CC_OPTIMIZE_FOR_SIZE
 KBUILD_CFLAGS	+= -Os $(call cc-disable-warning,maybe-uninitialized,)
 else
-KBUILD_CFLAGS	+= -O2
+KBUILD_CFLAGS	+= -O3
 endif
 
 include $(srctree)/arch/$(SRCARCH)/Makefile
