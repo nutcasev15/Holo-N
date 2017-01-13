@@ -1,0 +1,119 @@
+#!/bin/bash
+start=`date +%s`
+NOW=$(date +"%d-%m-%Y")
+echo "Current Date : $NOW"
+echo "Applying Build Settings"
+
+export ARCH=x86_64
+export CCOMPILE=$CROSS_COMPILE
+export CROSS_COMPILE=x86_64-linux-
+
+#CONFIGS
+export SLEEP=1
+printf "Enter Version Number:/<>/:"
+read v
+sleep $SLEEP
+echo "Setting Extra Version"
+export EV=EXTRAVERSION=_Hololite_v$v
+echo "Setting Defconfig"
+export DEFCONFIG=zenfone2_defconfig
+echo "Setting bzImage Location"
+export BZIMAGE=arch/x86/boot/bzImage
+echo "Enabling Graphite Optimizations"
+export ENABLE_GRAPHITE=true
+echo "To Enable Logging Support Export logs=1 or 101"
+echo "Set KBUILD_BUILD_VERSION to 0"
+export KBUILD_BUILD_VERSION="0"
+
+#Build
+echo "Checking for Previous Compiled Files"
+if [ -e "arch/x86/kernel/process_64.o" ];
+then
+	echo "Cleaning Out Compiled Files"
+	make clean
+	sleep 1
+	rm -f .config*old
+if [ -f log_*.log ];
+then
+	echo "Build Logs Will Be Deleted"
+	sleep 3
+	rm -f log*.log
+else
+	printf "All Files Cleared\n"
+fi
+fi
+printf "#### Enviroment Setup Complete ####\n\n"
+sleep 2
+echo "#### Building ####"
+if [ -f .config ];
+then
+   sleep 2
+   echo "Continuing To Compiler"
+else
+   echo ".config Does Not Exist"
+   echo "Compiling From $DEFCONFIG"
+   if [[ "$logs" > 0 ]];
+	then
+		make $DEFCONFIG $EV -j24 2>&1 | tee log_"$start".log
+	else
+		make $DEFCONFIG $EV -j24
+	fi
+fi
+#
+if [[ "$logs" > 0 ]];
+then
+	make $EV -j24 2>&1 | tee log_"$start".log
+else
+	make $EV -j24
+fi
+#
+end=`date +%s`
+#
+#Kernel Packing
+#
+if [ -f $BZIMAGE ];
+then
+	runtime=$((end-start))
+	printf "\n\nScript Made by eoghan2t7 of XDA\n"
+	echo "Version Number = "$v""
+	printf "\n\n#### Build Complete ####\n"
+	sleep 10
+	echo "#### Packing ####"
+	sleep 4
+	#
+	#make it a bit more beautiful :P
+	#
+	cd out/
+	echo "Removing Old Files"
+	rm -rf bzImage *.zip
+	sleep $SLEEP
+	echo "Copying bzImage"
+	cp ../arch/x86/boot/bzImage bzImage
+	echo "Compiling Hololite_v"$v".zip"
+	find . -type f -exec zip Hololite_v"$v".zip {} +
+	cd ..
+	rm out/bzImage
+	printf "Zip Created & Shipped\n"
+	rm -f $pr/Nexus/Dev/Hololite_v"$v".zip
+	mv out/Hololite_v"$v".zip $pr/Nexus/Dev
+	sleep 2
+	clear
+	echo "Completion Time :"
+	echo "$runtime Seconds"
+	unset SLEEP
+	unset logs
+	unset v
+	printf "\n\n#### Done ####\n"
+	exit 0
+else
+   echo "bzImage Does Not Exist; Please Check For Compile Errors"
+   printf "\n\n#### Build Failed ####\n"
+   sleep $SLEEP
+    if [[ "$logs" == 1 ]];
+	then
+		unset logs
+		exit 0
+	else
+		exit 0
+	fi
+fi
