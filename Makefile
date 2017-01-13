@@ -239,10 +239,10 @@ CONFIG_SHELL := $(shell if [ -x "$$BASH" ]; then echo $$BASH; \
 	  else if [ -x /bin/bash ]; then echo /bin/bash; \
 	  else echo sh; fi ; fi)
 
-HOSTCC       = gcc
-HOSTCXX      = g++
-HOSTCFLAGS   = -Wall -Wmissing-prototypes -Wstrict-prototypes -O2 -fomit-frame-pointer -std=gnu89
-HOSTCXXFLAGS = -O2
+HOSTCC       = $(CCACHE) gcc
+HOSTCXX      = $(CCACHE) g++
+HOSTCFLAGS   = -Wall -Wmissing-prototypes -Wstrict-prototypes -march=silvermont -mtune=silvermont -msse4.2 -mpopcnt -fomit-frame-pointer -fgcse-las -std=gnu89 -O3
+HOSTCXXFLAGS = -march=silvermont -mtune=silvermont -msse4.2 -mpopcnt -fgcse-las -O3
 
 # Decide whether to build built-in, modular, or both.
 # Normally, just do built-in.
@@ -371,11 +371,24 @@ KBUILD_CPPFLAGS := -D__KERNEL__
 
 KBUILD_CFLAGS   := $(ANDROID_TOOLCHAIN_FLAGS) \
 		   -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs \
-		   -fno-strict-aliasing -fno-common \
+		   -fno-strict-aliasing -fno-common -Wno-unused-value \
+		   -Werror-implicit-function-declaration -Wno-uninitialized \
+		   -Wno-format-security -Wno-array-bounds -Wno-unused-variable -Wno-unused-function \
+		   -Wno-sequence-point \
+		   -Wno-switch -fdiagnostics-color=always \
+		   -Wno-switch-enum \
+		   -fno-delete-null-pointer-checks -Wno-maybe-uninitialized \
+ 		   -std=gnu89 -ffloat-store -O3 -funsafe-math-optimizations \
+		   $(KERNEL_MODS)
+
+# L1/L2 cache size parameters
+KBUILD_CFLAGS	+= --param l1-cache-size=32 --param l1-cache-line-size=32 --param l2-cache-size=2048 -fno-strict-aliasing -fno-common \
 		   -Werror-implicit-function-declaration \
 		   -Wno-format-security \
 		   -fno-delete-null-pointer-checks \
-		   -std=gnu89
+		   -Wno-sizeof-pointer-memaccess \
+ 		   -std=gnu89 \
+		   $(KERNEL_MODS)
 
 KBUILD_AFLAGS_KERNEL :=
 KBUILD_CFLAGS_KERNEL :=
@@ -576,7 +589,7 @@ all: vmlinux
 ifdef CONFIG_CC_OPTIMIZE_FOR_SIZE
 KBUILD_CFLAGS	+= -Os $(call cc-disable-warning,maybe-uninitialized,)
 else
-KBUILD_CFLAGS	+= -O2
+KBUILD_CFLAGS	+= -O3
 endif
 
 include $(srctree)/arch/$(SRCARCH)/Makefile
