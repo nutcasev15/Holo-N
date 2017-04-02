@@ -241,11 +241,17 @@ CONFIG_SHELL := $(shell if [ -x "$$BASH" ]; then echo $$BASH; \
 
 HOSTCC       = $(CCACHE) gcc
 HOSTCXX      = $(CCACHE) g++
-HOSTCFLAGS   = -Wall -Wmissing-prototypes -Wstrict-prototypes -ffast-math -fomit-frame-pointer -fgcse-las -std=gnu89 -O3
+HOSTCFLAGS   = -Wall -Wmissing-prototypes -Wstrict-prototypes -fomit-frame-pointer -fgcse-las -std=gnu89 -O3
 HOSTCXXFLAGS = -march=silvermont -mtune=silvermont -msse4.2 -mpopcnt -fgcse-las -O3
 ifeq ($(ENABLE_GRAPHITE),true)
-HOSTCXXFLAGS += -fgraphite -floop-flatten -floop-parallelize-all -ftree-loop-linear -floop-strip-mine -floop-block -fgraphite-identity -floop-block -floop-strip-mine -ftree-loop-distribution -ftree-loop-linear
-HOSTCFLAGS += -fgraphite -floop-flatten -floop-parallelize-all -ftree-loop-linear -floop-strip-mine -floop-block -floop-block -floop-strip-mine -fgraphite-identity -ftree-loop-distribution -ftree-loop-linear -ffast-math
+HOSTCXXFLAGS += -fgraphite -floop-flatten -floop-parallelize-all \
+				-ftree-loop-linear -floop-strip-mine -floop-block \
+				-fgraphite-identity -floop-block -floop-strip-mine \
+				-ftree-loop-distribution -ftree-loop-linear
+HOSTCFLAGS += -fgraphite -floop-flatten -floop-parallelize-all \
+				-ftree-loop-linear -floop-strip-mine -floop-block \
+				-floop-block -floop-strip-mine -fgraphite-identity \
+				-ftree-loop-distribution -ftree-loop-linear
 endif
 
 # Decide whether to build built-in, modular, or both.
@@ -375,14 +381,19 @@ KBUILD_CPPFLAGS := -D__KERNEL__
 
 KBUILD_CFLAGS   := $(ANDROID_TOOLCHAIN_FLAGS) \
 		   -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs \
-		   -fno-strict-aliasing -fno-common -Wno-unused-value \
-		   -Werror-implicit-function-declaration -Wno-uninitialized \
-		   -Wno-format-security -Wno-array-bounds -Wno-unused-variable -Wno-unused-function \
+		   -fno-strict-aliasing -fno-common \
+		   -Wno-unused-value \
+		   -Werror-implicit-function-declaration \
+		   -Wno-uninitialized \
+		   -Wno-format-security \
+		   -Wno-array-bounds \
+		   -Wno-unused-variable \
+		   -Wno-unused-function \
 		   -Wno-sequence-point \
 		   -Wno-switch -fdiagnostics-color=always \
 		   -Wno-switch-enum \
 		   -fno-delete-null-pointer-checks -Wno-maybe-uninitialized \
- 		   -std=gnu89 -ffloat-store -funsafe-math-optimizations \
+ 		   -std=gnu89 -ffloat-store \
 		   $(KERNEL_MODS)
 
 # L1/L2 cache size parameters
