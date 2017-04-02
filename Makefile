@@ -241,8 +241,8 @@ CONFIG_SHELL := $(shell if [ -x "$$BASH" ]; then echo $$BASH; \
 
 HOSTCC       = $(CCACHE) gcc
 HOSTCXX      = $(CCACHE) g++
-HOSTCFLAGS   = -Wall -Wmissing-prototypes -Wstrict-prototypes -fomit-frame-pointer -fgcse-las -std=gnu89 -O3
-HOSTCXXFLAGS = -march=silvermont -mtune=silvermont -msse4.2 -mpopcnt -fgcse-las -O3
+HOSTCFLAGS   = -Wall -Wmissing-prototypes -Wstrict-prototypes -fomit-frame-pointer -fgcse-las -std=gnu89 -mstackrealign -O3
+HOSTCXXFLAGS = -march=silvermont -mtune=silvermont -msse4.2 -mpopcnt -fgcse-las -mstackrealign -O3
 ifeq ($(ENABLE_GRAPHITE),true)
 HOSTCXXFLAGS += -fgraphite -floop-flatten -floop-parallelize-all \
 				-ftree-loop-linear -floop-strip-mine -floop-block \
@@ -392,6 +392,8 @@ KBUILD_CFLAGS   := $(ANDROID_TOOLCHAIN_FLAGS) \
 		   -Wno-sequence-point \
 		   -Wno-switch -fdiagnostics-color=always \
 		   -Wno-switch-enum \
+		   -Wno-nonnull -fno-openacc \
+		   -Wno-misleading-indentation -mstackrealign \
 		   -fno-delete-null-pointer-checks -Wno-maybe-uninitialized \
  		   -std=gnu89 -ffloat-store \
 		   $(KERNEL_MODS)
