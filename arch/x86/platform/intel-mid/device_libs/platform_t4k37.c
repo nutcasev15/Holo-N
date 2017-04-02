@@ -179,7 +179,7 @@ static int t4k37_power_ctrl(struct v4l2_subdev *sd, int flag)
 				//turn on 2.8V
 				if (!camera_vprog1_on) {
 			    	  	camera_vprog1_on = 1;
-			    		ret = intel_scu_ipc_msic_vprog1(1);
+			    		reg_err = intel_scu_ipc_msic_vprog1(1);
 			    		if (reg_err) {
 					    printk(KERN_ALERT "Failed to enable regulator vprog1\n");
 					    return reg_err;
@@ -197,7 +197,7 @@ static int t4k37_power_ctrl(struct v4l2_subdev *sd, int flag)
 			//turn on 2.8V
 			if (!camera_vprog1_on) {
 			    camera_vprog1_on = 1;
-			    ret = intel_scu_ipc_msic_vprog1(1);
+			    reg_err = intel_scu_ipc_msic_vprog1(1);
 			    if (reg_err) {
 				printk(KERN_ALERT "Failed to enable regulator vprog1\n");
 				return reg_err;
@@ -213,7 +213,7 @@ static int t4k37_power_ctrl(struct v4l2_subdev *sd, int flag)
 		//turn on power 1.8V
 		if (!camera_vprog2_on) {
 			camera_vprog2_on = 1;
-			ret = intel_scu_ipc_iowrite8(MSIC_VPROG2_MRFLD_CTRL, 0x41);
+			reg_err = intel_scu_ipc_iowrite8(MSIC_VPROG2_MRFLD_CTRL, 0x41);
 			if (reg_err) {
 				printk(KERN_ALERT "Failed to enable regulator vprog1\n");
 				return reg_err;
