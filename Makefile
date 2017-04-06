@@ -694,9 +694,13 @@ KBUILD_CFLAGS   += $(call cc-option,-fconserve-stack)
 KBUILD_ARFLAGS := $(call ar-option,D)
 
 # Use Following Flags if CC is GCC 6.x.y+ for Compatibilty
-GCCVERSION := $(shell expr `$(CC) -dumpversion | cut -f1 -d.` \>= 6)
-ifeq ($GCCVERSION, 1)
+ifeq ($(shell expr `$(CC) -dumpversion | cut -f1 -d.` \>= 6), 1)
 	KBUILD_CFLAGS	+= -fno-openacc -Wno-misleading-indentation -fdiagnostics-color=always
+endif
+
+# Needed to unbreak GCC 7.x and above
+ifeq ($(shell expr `$(CC) -dumpversion | cut -f1 -d.` \>= 7), 1)
+	KBUILD_CFLAGS   += $(call cc-option,-fno-store-merging,)
 endif
 
 # check for 'asm goto'
