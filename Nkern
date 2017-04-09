@@ -10,8 +10,13 @@ export CROSS_COMPILE=x86_64-linux-
 
 #CONFIGS
 export SLEEP=1
-printf "Enter Version Number:/<>/:"
-read v
+if [[ -z "$1" ]]
+then
+	printf "Enter Version Number:/<>/:"
+	read v
+else
+	export v="$1"
+fi
 sleep $SLEEP
 echo "Setting Extra Version"
 export EV=EXTRAVERSION=_Hololite_v$v
@@ -19,8 +24,6 @@ echo "Setting Defconfig"
 export DEFCONFIG=zenfone2_defconfig
 echo "Setting bzImage Location"
 export BZIMAGE=arch/x86/boot/bzImage
-echo "Enabling Graphite Optimizations"
-export ENABLE_GRAPHITE=true
 echo "To Enable Logging Support Export logs=1 or 101"
 echo "Set KBUILD_BUILD_VERSION to 0"
 export KBUILD_BUILD_VERSION="0"
@@ -45,9 +48,9 @@ fi
 printf "#### Enviroment Setup Complete ####\n\n"
 sleep 2
 echo "#### Building ####"
+sleep $SLEEP
 if [ -f .config ];
 then
-   sleep 2
    echo "Continuing To Compiler"
 else
    echo ".config Does Not Exist"
@@ -94,8 +97,7 @@ then
 	cd ..
 	rm out/bzImage
 	printf "Zip Created & Shipped\n"
-	rm -f $pr/Nexus/Dev/Hololite_v"$v".zip
-	mv out/Hololite_v"$v".zip $pr/Nexus/Dev
+	mv out/HoloN_v"$v".zip ../../
 	sleep 2
 	clear
 	echo "Completion Time :"
@@ -109,7 +111,7 @@ else
    echo "bzImage Does Not Exist; Please Check For Compile Errors"
    printf "\n\n#### Build Failed ####\n"
    sleep $SLEEP
-    if [[ "$logs" == 1 ]];
+	if [[ "$logs" == 1 ]];
 	then
 		unset logs
 		exit 0
