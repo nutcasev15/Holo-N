@@ -133,7 +133,7 @@ struct cpufreq_frankenstein_tunables {
 
 /* For cases where we have single governor instance for system */
 static struct cpufreq_frankenstein_tunables *common_tunables;
-static struct kobject *get_governor_parent_kobj(struct cpufreq_policy *policy);
+static struct kobject *get_governor_parent_kobj_static(struct cpufreq_policy *policy);
 static struct attribute_group *get_sysfs_attr(void);
 
 static inline cputime64_t get_cpu_idle_time_jiffy(unsigned int cpu,
@@ -1388,7 +1388,7 @@ static int cpufreq_governor_frankenstein(struct cpufreq_policy *policy,
 		if (!have_governor_per_policy())
 			common_tunables = tunables;
 
-		rc = sysfs_create_group(get_governor_parent_kobj(policy),
+		rc = sysfs_create_group(get_governor_parent_kobj_static(policy),
 				get_sysfs_attr());
 		if (rc) {
 			kfree(tunables);
@@ -1416,7 +1416,7 @@ static int cpufreq_governor_frankenstein(struct cpufreq_policy *policy,
 				unregister_early_suspend(&hotplug_auxcpus_desc);
 			}
 
-			sysfs_remove_group(get_governor_parent_kobj(policy),
+			sysfs_remove_group(get_governor_parent_kobj_static(policy),
 					get_sysfs_attr());
 			kfree(tunables);
 			common_tunables = NULL;
@@ -1531,7 +1531,7 @@ static void cpufreq_frankenstein_nop_timer(unsigned long data)
 {
 }
 
-static struct kobject *get_governor_parent_kobj(struct cpufreq_policy *policy)
+static struct kobject *get_governor_parent_kobj_static(struct cpufreq_policy *policy)
 {
 	if (have_governor_per_policy())
 		return &policy->kobj;
