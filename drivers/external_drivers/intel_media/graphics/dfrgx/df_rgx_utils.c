@@ -31,14 +31,14 @@ extern int is_tng_a0;
 extern int gpu_freq_get_max_fuse_setting(void);
 
 struct gpu_freq_thresholds a_governor_profile[] = {
-			/* low, high thresholds for Performance profile */
-			{67, 85},
+			/* low, high thresholds for SimpleOndemand profile */
+			{75, 87},
 			/* low, high thresholds for Power Save profile*/
-			{80, 95},
-			/* low, high Custom thresholds */
-			{67, 85},
-			/* low, high Performance */
-			{25, 45}
+			{78, 92},
+			/* low, high Performance thresholds */
+			{38, 48},
+			/* low, high Custom (SimpleOndemand Old) */
+			{67, 85}
 			};
 /**
  * df_rgx_is_valid_freq() - Determines if We are about to use
@@ -107,22 +107,24 @@ unsigned int df_rgx_request_burst(struct df_rgx_data_s *pdfrgx_data,
 	unsigned long freq = a_available_state_freq[current_index].freq;
 	int new_index;
 	unsigned int burst = DFRGX_NO_BURST_REQ;
+	unsigned int th_high_util;
+	unsigned int th_low_util;
 
 	new_index = df_rgx_get_util_record_index_by_freq(freq);
+	th_high_util = a_governor_profile[pdfrgx_data->g_profile_index].util_th_high + ((-1)^current_index)*(freq/200000);
+	th_low_util = a_governor_profile[pdfrgx_data->g_profile_index].util_th_low + ((-1)^current_index)*(freq/200000);
 
 	if (new_index < 0)
 		goto out;
 
 	/* Decide unburst/burst based on utilization*/
-	if (util_percentage > a_governor_profile[pdfrgx_data->g_profile_index].util_th_high
-		&& new_index < pdfrgx_data->g_max_freq_index) {
+	if (util_percentage > th_high_util && new_index < pdfrgx_data->g_max_freq_index) {
 		/* Provide recommended burst*/
-		pdfrgx_data->gpu_utilization_record_index = pdfrgx_data->g_max_freq_index;
+		pdfrgx_data->gpu_utilization_record_index += 1;
 		burst = DFRGX_BURST_REQ;
-	} else if (util_percentage < a_governor_profile[pdfrgx_data->g_profile_index].util_th_low
-		&& new_index > pdfrgx_data->g_min_freq_index) {
+	} else if (util_percentage < th_low_util && new_index > pdfrgx_data->g_min_freq_index) {
 		/* Provide recommended unburst*/
-		pdfrgx_data->gpu_utilization_record_index = pdfrgx_data->g_min_freq_index;
+		pdfrgx_data->gpu_utilization_record_index -= 1;
 		burst = DFRGX_UNBURST_REQ;
 	} else if (new_index < pdfrgx_data->g_min_freq_index) {
 		/* If frequency is throttled, request return to min */
@@ -150,7 +152,7 @@ int df_rgx_set_governor_profile(const char *governor_name,
 	else if (!strncmp(governor_name, "powersave", DEVFREQ_NAME_LEN))
 		g_dfrgx->g_profile_index = DFRGX_TURBO_PROFILE_POWERSAVE;
 	else if (!strncmp(governor_name, "simple_ondemand", DEVFREQ_NAME_LEN)) {
-		g_dfrgx->g_profile_index = DFRGX_TURBO_PROFILE_CUSTOM;
+		g_dfrgx->g_profile_index = DFRGX_TURBO_PROFILE_SIMPLE_ON_DEMAND;
 		ret = 1;
 	} else if (!strncmp(governor_name, "userspace", DEVFREQ_NAME_LEN))
 		g_dfrgx->g_profile_index = DFRGX_TURBO_PROFILE_USERSPACE;
