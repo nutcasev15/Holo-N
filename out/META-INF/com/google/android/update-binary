@@ -33,7 +33,7 @@ unzip -o "$ZIP";
 set_perm_recursive 0 0 0777 0777 /tmp/anykernel;
 
 ui_print "$(file_getprop /tmp/anykernel/anykernel.sh kernel.string)";
-ui_print "            Krypton Release         ";
+ui_print "            Xenon Release           ";
 ui_print "      _   _    __    _       __     ";
 ui_print "     | |_| |  /  \  | |     /  \    ";
 ui_print "     |  _  | |    | | |__  |    |   ";
@@ -89,9 +89,7 @@ fi;
 if [ "$(file_getprop /tmp/anykernel/anykernel.sh do.cleanup)" == 1 ]; then
   rm -rf /tmp/anykernel;
 fi;
-
-umount /system;
 ui_print " ";
-ui_print "Install Failed; ROM Nuked";
-ui_print ";
-
+ui_print "Too Lazy to put an Error Here. Enjoy ;) ";
+ui_print " ";
+umount /system;
