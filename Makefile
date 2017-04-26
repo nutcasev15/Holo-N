@@ -322,8 +322,18 @@ MAKEFLAGS += --include-dir=$(srctree)
 $(srctree)/scripts/Kbuild.include: ;
 include $(srctree)/scripts/Kbuild.include
 
-# Make variables (CC, etc...)
-
+# Make variables (CC, etc...) + Hax for Rom Inline Compile
+ifneq ($(CROSS_COMPILE_I),)
+AS		= x86_64-linux-as
+LD		= x86_64-linux-ld
+CC		= x86_64-linux-gcc
+CPP		= $(CC) -E
+AR		= x86_64-linux-ar
+NM		= x86_64-linux-nm
+STRIP		= x86_64-linux-strip
+OBJCOPY		= x86_64-linux-objcopy
+OBJDUMP		= x86_64-linux-objdump
+else
 AS		= $(CROSS_COMPILE)as
 LD		= $(CROSS_COMPILE)ld
 CC		= $(CROSS_COMPILE)gcc
@@ -333,6 +343,7 @@ NM		= $(CROSS_COMPILE)nm
 STRIP		= $(CROSS_COMPILE)strip
 OBJCOPY		= $(CROSS_COMPILE)objcopy
 OBJDUMP		= $(CROSS_COMPILE)objdump
+endif
 AWK		= awk
 GENKSYMS	= scripts/genksyms/genksyms
 INSTALLKERNEL  := installkernel
