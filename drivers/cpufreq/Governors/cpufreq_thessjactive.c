@@ -151,6 +151,9 @@ static struct cpufreq_thessjactive_tunables *common_tunables;
 static struct kobject *get_governor_parent_kobj_static(struct cpufreq_policy *policy);
 static struct attribute_group *get_sysfs_attr(void);
 
+/* Suspend/Resume Code */
+static const int cap_freq = 666000;
+static bool suspended;
 static void __cpuinit early_suspend_offline_cpus(struct early_suspend *h)
 {
 	#ifdef GOVDEBUG
@@ -166,6 +169,7 @@ static void __cpuinit early_suspend_offline_cpus(struct early_suspend *h)
 			cpu_down(cpu);
 	}
 	#endif
+	suspended = true;
 }
 
 static void __cpuinit late_resume_online_cpus(struct early_suspend *h)
@@ -181,6 +185,7 @@ static void __cpuinit late_resume_online_cpus(struct early_suspend *h)
 			cpu_up(cpu);
 	}
 	#endif
+	suspended = false;
 }
 
 static struct early_suspend hotplug_auxcpus_desc __refdata = {
@@ -356,6 +361,11 @@ static unsigned int freq_to_targetload(
 static unsigned int choose_freq(struct cpufreq_thessjactive_cpuinfo *pcpu,
 		unsigned int loadadjfreq)
 {
+	// Override This function if Suspended
+	if (suspended) {
+		return cap_freq;
+	}
+
 	unsigned int freq = pcpu->policy->cur;
 	unsigned int prevfreq, freqmin, freqmax;
 	unsigned int tl;
@@ -569,12 +579,12 @@ static void cpufreq_thessjactive_timer(unsigned long data)
 		}
 	} else {
 		new_freq = choose_freq(pcpu, loadadjfreq);
-		if (now < tunables->touchboostpulse_endtime) {
+		if (now < tunables->touchboostpulse_endtime && !suspended) {
 			if (new_freq < tunables->touchboost_freq)
 				new_freq = tunables->touchboost_freq;
 			}
 		if (new_freq > tunables->hispeed_freq &&
-				pcpu->target_freq < tunables->hispeed_freq)
+				pcpu->target_freq < tunables->hispeed_freq && !suspended)
 			new_freq = tunables->hispeed_freq;
 	}
 
@@ -598,7 +608,10 @@ static void cpufreq_thessjactive_timer(unsigned long data)
 		goto rearm;
 	}
 
-	new_freq = pcpu->freq_table[index].frequency;
+	if (suspended)
+		new_freq = cap_freq;
+	else
+		new_freq = pcpu->freq_table[index].frequency;
 
 	/*
 	 * Do not scale below floor_freq unless we have been at or above the
