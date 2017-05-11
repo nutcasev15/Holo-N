@@ -136,9 +136,28 @@ config CPU_FREQ_GOV_INTEL
 config CPU_FREQ_GOV_LIONHEART
 	tristate "'lionheart' cpufreq governor"
 	depends on CPU_FREQ
-	default y
+	default n
 	help
 lionheart' - a "smart" optimized governor!
+
+config CPU_FREQ_GOV_ONDEMAND
+	tristate "'ondemand' cpufreq policy governor"
+	select CPU_FREQ_TABLE
+	select CPU_FREQ_GOV_COMMON
+	help
+	  'ondemand' - This driver adds a dynamic cpufreq policy governor.
+	  The governor does a periodic polling and 
+	  changes frequency based on the CPU utilization.
+	  The support for this governor depends on CPU capability to
+	  do fast frequency switching (i.e, very low latency frequency
+	  transitions). 
+
+	  To compile this driver as a module, choose M here: the
+	  module will be called cpufreq_ondemand.
+
+	  For details, take a look at linux/Documentation/cpu-freq.
+
+	  If in doubt, say N.
 		  
 config CPU_FREQ_GOV_PERFORMANCE
 	tristate "'performance' governor"

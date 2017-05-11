@@ -8,3 +8,4 @@ obj-$(CONFIG_CPU_FREQ_GOV_CONSERVATIVEX)             += cpufreq_conservativex.o
 obj-$(CONFIG_CPU_FREQ_GOV_INTEL)             += cpufreq_intel.o
 obj-$(CONFIG_CPU_FREQ_GOV_THESSJACTIVE)             += cpufreq_thessjactive.o
 obj-$(CONFIG_CPU_FREQ_GOV_ALUCARD)				+= cpufreq_alucard.o
+obj-$(CONFIG_CPU_FREQ_GOV_ONDEMAND)				+= cpufreq_ondemand.o
