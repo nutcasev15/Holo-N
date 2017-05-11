@@ -28,30 +28,30 @@
  * It helps to keep variable names smaller, simpler
  */
 
-#define DEF_FREQUENCY_DOWN_DIFFERENTIAL     (5)
-#define DEF_FREQUENCY_UP_THRESHOLD          (80)
+#define DEF_FREQUENCY_DOWN_DIFFERENTIAL     (10)
+#define DEF_FREQUENCY_UP_THRESHOLD          (95)
 #define DEF_SAMPLING_DOWN_FACTOR            (1)
-#define MAX_SAMPLING_DOWN_FACTOR            (100000)
-#define MICRO_FREQUENCY_DOWN_DIFFERENTIAL   (15)
+#define MAX_SAMPLING_DOWN_FACTOR            (10000)
+#define MICRO_FREQUENCY_DOWN_DIFFERENTIAL   (10)
 #define MIN_FREQUENCY_DOWN_DIFFERENTIAL     (5)
 #define MAX_FREQUENCY_DOWN_DIFFERENTIAL     (10)
-#define MICRO_FREQUENCY_UP_THRESHOLD        (90)
+#define MICRO_FREQUENCY_UP_THRESHOLD        (95)
 #define MICRO_FREQUENCY_MIN_SAMPLE_RATE     (27000)
 #define MIN_FREQUENCY_UP_THRESHOLD          (21)
 #define MAX_FREQUENCY_UP_THRESHOLD          (100)
 
 #define DEF_CPU_DOWN_DIFFERENTIAL   (5)
-#define MICRO_CPU_DOWN_DIFFERENTIAL (10)
+#define MICRO_CPU_DOWN_DIFFERENTIAL (5)
 #define MIN_CPU_DOWN_DIFFERENTIAL   (0)
 #define MAX_CPU_DOWN_DIFFERENTIAL   (30)
 
-#define DEF_CPU_UP_THRESHOLD        (95)
-#define MICRO_CPU_UP_THRESHOLD      (30)
+#define DEF_CPU_UP_THRESHOLD        (70)
+#define MICRO_CPU_UP_THRESHOLD      (70)
 #define MIN_CPU_UP_THRESHOLD        (30)
 #define MAX_CPU_UP_THRESHOLD        (100)
 
-#define CPU_UP_AVG_TIMES        (10)
-#define CPU_DOWN_AVG_TIMES      (50)
+#define CPU_UP_AVG_TIMES        (20)
+#define CPU_DOWN_AVG_TIMES      (150)
 
 //#define DEBUG_LOG
 
@@ -165,13 +165,13 @@ static struct dbs_tuners {
     .sampling_down_factor = DEF_SAMPLING_DOWN_FACTOR,
     .down_differential = DEF_FREQUENCY_DOWN_DIFFERENTIAL,
     .ignore_nice = 0,
-    .powersave_bias = 0,
+    .powersave_bias = 300,
     .cpu_up_threshold = DEF_CPU_UP_THRESHOLD,
     .cpu_down_differential = DEF_CPU_DOWN_DIFFERENTIAL,
     .cpu_up_avg_times = CPU_UP_AVG_TIMES,
     .cpu_down_avg_times = CPU_DOWN_AVG_TIMES,
-    .cpu_num_limit = 1,
-    .cpu_num_base = 1,
+    .cpu_num_limit = 2,
+    .cpu_num_base = 4,
     .cpu_hotplug_disable1 = 1,
 };
 
