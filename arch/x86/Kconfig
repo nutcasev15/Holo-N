@@ -511,6 +511,12 @@ config X86_MDFLD
 	  nor standard legacy replacement devices/features. e.g. Medfield does
 	  not contain i8259, i8254, HPET, legacy BIOS, most of the io ports.
 
+config BLU_PLUG
+    bool "Dynamic Hotplug driver"
+    depends on HOTPLUG_CPU
+    help
+      The Dynamic hotplug driver automatically online/offline CPUs proportional to system load.
+
 config ATOM_SOC_POWER
 	bool "Select Atom SOC Power"
 
