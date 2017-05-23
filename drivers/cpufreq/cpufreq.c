@@ -1456,6 +1456,27 @@ unsigned int cpufreq_quick_get_max(unsigned int cpu)
 }
 EXPORT_SYMBOL(cpufreq_quick_get_max);
 
+/*
+ *     cpufreq_quick_get_util - get the CPU utilization
+ *     @cpu: CPU whose load needs to be known based on current core freq
+ */
+unsigned int cpufreq_quick_get_util(unsigned int cpu)
+{
+	struct cpufreq_policy *policy = cpufreq_cpu_get(cpu);
+	unsigned int load;
+	unsigned int cur;
+	unsigned int usr_max;
+
+	if (policy) {
+		usr_max = policy->user_policy.max;
+		cur = cpufreq_quick_get(cpu);
+		load = cur/usr_max * 100;
+		cpufreq_cpu_put(policy);
+	}
+
+	return load;
+}
+EXPORT_SYMBOL(cpufreq_quick_get_util);
 
 static unsigned int __cpufreq_get(unsigned int cpu)
 {
