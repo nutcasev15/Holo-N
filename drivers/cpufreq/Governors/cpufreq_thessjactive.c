@@ -160,13 +160,12 @@ static void __cpuinit early_suspend_offline_cpus(struct early_suspend *h)
 	printk("entered early_suspend handler in thessjactive");
 	#else
 	unsigned int cpu;
-	for_each_possible_cpu(cpu)
+	for_each_online_cpu(cpu)
 	{
-		if (cpu<2) //begin offline work at core 3
-			continue;
-		
-		if (cpu_online(cpu) && num_online_cpus() > 2) //get 2 cores down, cores 3 and 4 
+		if (cpu > 1 && num_online_cpus() > 2) {
+			//get 2 cores down; cores 3 and 4
 			cpu_down(cpu);
+		}
 	}
 	#endif
 	suspended = true;
