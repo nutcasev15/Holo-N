@@ -332,8 +332,30 @@ static struct kernel_param_ops up_timer_cnt_ops = {
 
 module_param_cb(up_timer_cnt, &up_timer_cnt_ops, &up_timer_cnt, 0644);
 
-/* plug_threshold */
-module_param_array(plug_threshold, uint, NULL, 0644);
+/* Sampling Interval */
+static int set_delay(const char *val, const struct kernel_param *kp)
+{
+	int ret = 0;
+	unsigned int i;
+
+	ret = kstrtouint(val, 10, &i);
+	if (ret)
+		return -EINVAL;
+
+	if (i < (INIT_DELAY/100) || i > INIT_DELAY)
+		return -EINVAL;
+
+	delay = i;
+
+	return ret;
+}
+
+static struct kernel_param_ops delay_ops = {
+	.set = set_delay,
+	.get = param_get_uint,
+};
+
+module_param_cb(delay, &delay_ops, &delay, 0644);
 
 /***************** end of module parameters *****************/
 
