@@ -52,23 +52,11 @@ static unsigned int up_timer;
 static unsigned int down_timer_cnt = DEF_DOWN_TIMER_CNT;
 static unsigned int up_timer_cnt = DEF_UP_TIMER_CNT;
 static unsigned int max_cores_screenoff = MAX_CORES_SCREENOFF;
-static unsigned int plug_threshold[MAX_ONLINE] = {[0 ... MAX_ONLINE-1] = DEF_PLUG_THRESHOLD};
+static unsigned int max_cores;
 
 static struct delayed_work dyn_work;
 static struct workqueue_struct *dyn_workq;
 static struct notifier_block notify;
-
-/* Bring online each possible CPU up to max_online cores */
-static void __ref up_all(void)
-{
-	unsigned int cpu;
-
-	for_each_possible_cpu(cpu)
-		if (cpu_is_offline(cpu) && num_online_cpus() < max_online)
-			cpu_up(cpu);
-
-	down_timer = 0;
-}
 
 /* Iterate through possible CPUs and bring online the first offline found */
 static void __ref up_one(void)
@@ -79,55 +67,44 @@ static void __ref up_one(void)
 	if (num_online_cpus() >= max_online)
 		goto out;
 
-	cpu = cpumask_next_zero(0, cpu_online_mask);
-	if (cpu < nr_cpu_ids)
-		cpu_up(cpu);
+	for_each_possible_cpu(cpu) {
+		if (cpu_is_offline(cpu)) {
+			cpu_up(cpu);
+#if DEBUG
+			printk("%s: Core %u Up\n", __func__, cpu);
+#endif
+			break;
+		}
+	}
+
 out:
 	down_timer = 0;
 	up_timer = 0;
 }
 
-/* Iterate through online CPUs and take offline the lowest loaded one */
-static inline void down_one(void)
+/* Iterate through online CPUs and take offline latest core */
+static void __ref down_one(void)
 {
 	unsigned int cpu;
-	unsigned int l_cpu = 0;
-	unsigned int l_freq = ~0;
-	unsigned int p_cpu = 0;
-	unsigned int p_thres = 0;
-	bool all_equal = false;
 
 	/* Min online CPUs, return */
 	if (num_online_cpus() <= min_online)
 		goto out;
 
-	for_each_online_cpu(cpu) {
-		unsigned int thres = plug_threshold[cpu];
-		
-		if (!cpu || thres == p_thres) {
-			p_thres = thres;
-			p_cpu = cpu;
-			all_equal = true;
-		} else if (thres > p_thres) {
-			p_thres = thres;
-			p_cpu = cpu;
-			all_equal = false;
-		}
-		
-		if (cpu) {
-			unsigned int cur = cpufreq_quick_get(cpu);
-
-			if (l_freq > cur) {
-				l_freq = cur;
-				l_cpu = cpu;
-			}
+	for (cpu = max_cores; cpu > 0; cpu--) {
+		if (cpu_online(cpu)) {
+#if DEBUG
+			printk("%s: Selected Core %u\n", __func__, cpu);
+#endif
+			cpu_down(cpu);
+			break;
 		}
 	}
 
-	if (all_equal)
-		cpu_down(l_cpu);
-	else
-		cpu_down(p_cpu);
+#if DEBUG
+	printk("%s: Core %u Down\n", __func__, cpu);
+#endif
+
 out:
 	down_timer = 0;
 	up_timer = 0;
@@ -157,14 +134,14 @@ static void load_timer(struct work_struct *work)
 	avg_load /= online_cpus;
 
 #if DEBUG
-	pr_debug("%s: avg_load: %u, num_online_cpus: %u\n", __func__, avg_load, num_online_cpus());
-	pr_debug("%s: up_timer: %u, down_timer: %u\n", __func__, up_timer, down_timer);
+	printk("%s: avg_load: %u, num_online_cpus: %u\n", __func__, avg_load, online_cpus);
+	printk("%s: up_timer: %u, down_timer: %u\n", __func__, up_timer, down_timer);
 #endif
 
 	if ((avg_load >= up_threshold && up_timer >= up_timer_cnt) ||
 		online_cpus < min_online)
 		up_one();
-	else if (down_timer >= down_timer_cnt || online_cpus > max_online)
+	else if ((down_timer >= down_timer_cnt && avg_load <= up_threshold) || online_cpus > max_online)
 		down_one();
 
 	queue_delayed_work_on(0, dyn_workq, &dyn_work, msecs_to_jiffies(delay));
@@ -177,16 +154,18 @@ static void blu_plug_suspend(void)
 
 	cancel_delayed_work_sync(&dyn_work);
 
-	for_each_possible_cpu(cpu) {
-		if (cpu != 0 && cpu_online(cpu)
-			&& num_online_cpus() > max_cores_screenoff)
-			cpu_down(cpu);
-	}
+	while (num_online_cpus() > max_cores_screenoff)
+		down_one();
 }
 
 static void blu_plug_resume(void)
 {
-	up_all();
+#if DEBUG
+	printk("%s: Starting Operations", __func__);
+#endif
+
+	while (num_online_cpus() < max_cores)
+		up_one();
 	queue_delayed_work_on(0, dyn_workq, &dyn_work, msecs_to_jiffies(delay));
 }
 
@@ -248,7 +227,7 @@ static int set_min_online(const char *val, const struct kernel_param *kp)
 	if (ret)
 		return -EINVAL;
 
-	if (i < 1 || i > max_online || i > num_possible_cpus())
+	if (i < 1 || i > max_online || i > max_cores)
 		return -EINVAL;
 
 	min_online = i;
@@ -273,7 +252,7 @@ static int set_max_online(const char *val, const struct kernel_param *kp)
 	if (ret)
 		return -EINVAL;
 
-	if (i < 1 || i < min_online || i > num_possible_cpus())
+	if (i < 1 || i < min_online || i > max_cores)
 		return -EINVAL;
 
 	max_online = i;
@@ -298,7 +277,7 @@ static int set_max_cores_screenoff(const char *val, const struct kernel_param *k
 	if (ret)
 		return -EINVAL;
 
-	if (i < 1 || i > max_online || i > num_possible_cpus())
+	if (i < 1 || i > max_online || i > max_cores)
 		return -EINVAL;
 
 	if (i > max_online)
@@ -379,12 +358,8 @@ static int dyn_hp_init(void)
 	if (!blu_plug_enabled)
 		return 0;
 
-#ifdef CONFIG_STATE_NOTIFIER
-	notify.notifier_call = state_notifier_callback;
-	if (state_register_client(&notify))
-		pr_err("%s: Failed to register State notifier callback\n",
-			__func__);
-#endif
+	register_early_suspend(&screen_state);
+	max_cores = num_possible_cpus();
 
 	dyn_workq = alloc_workqueue("dyn_hotplug_workqueue", WQ_HIGHPRI | WQ_FREEZABLE, 0);
 	if (!dyn_workq)
@@ -393,15 +368,13 @@ static int dyn_hp_init(void)
 	INIT_DELAYED_WORK(&dyn_work, load_timer);
 	queue_delayed_work_on(0, dyn_workq, &dyn_work, msecs_to_jiffies(INIT_DELAY));
 
-	pr_info("%s: activated\n", __func__);
+	printk("%s: activated\n", __func__);
 
 	return 0;
 }
 
 static void __ref dyn_hp_exit(void)
 {
-	int cpu;
-
 	cancel_delayed_work_sync(&dyn_work);
 
 #ifdef CONFIG_STATE_NOTIFIER
@@ -411,11 +384,13 @@ static void __ref dyn_hp_exit(void)
 	destroy_workqueue(dyn_workq);
 
 	/* Wake up all the sibling cores */
-	for_each_possible_cpu(cpu)
-		if (!cpu_online(cpu))
-			cpu_up(cpu);
-	
-	pr_info("%s: deactivated\n", __func__);
+	while (num_online_cpus() != max_cores)
+		up_one();
+#if DEBUG
+	printk("%s: All CPUs Up\n", __func__);
+#endif
+
+	printk("%s: deactivated\n", __func__);
 }
 
 /* enabled */
