@@ -1463,14 +1463,10 @@ EXPORT_SYMBOL(cpufreq_quick_get_max);
 unsigned int cpufreq_quick_get_util(unsigned int cpu)
 {
 	struct cpufreq_policy *policy = cpufreq_cpu_get(cpu);
-	unsigned int load;
-	unsigned int cur;
-	unsigned int usr_max;
+	unsigned int load = 11;
 
 	if (policy) {
-		usr_max = policy->user_policy.max;
-		cur = cpufreq_quick_get(cpu);
-		load = cur/usr_max * 100;
+		load = (policy->cur * 100)/policy->max;
 		cpufreq_cpu_put(policy);
 	}
 
