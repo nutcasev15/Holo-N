@@ -151,7 +151,7 @@ static void __cpuinit blu_plug_suspend(struct early_suspend *h)
 	printk("%s: Suspending Operations", __func__);
 #endif
 
-	cancel_delayed_work_sync(&dyn_work);
+	cancel_delayed_work_sync(&dyn_work);	
 
 	while (num_online_cpus() > max_cores_screenoff)
 		down_one();
@@ -261,7 +261,7 @@ static int set_max_cores_screenoff(const char *val, const struct kernel_param *k
 	if (ret)
 		return -EINVAL;
 
-	if (i < 1 || i > max_online || i > max_cores)
+	if (i < min_online || i > max_online || i > max_cores)
 		return -EINVAL;
 
 	if (i > max_online)
