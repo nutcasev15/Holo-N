@@ -432,7 +432,8 @@ module_param_cb(enabled, &enabled_ops, &blu_plug_enabled, 0644);
 
 MODULE_AUTHOR("Stratos Karafotis <stratosk@semaphore.gr");
 MODULE_AUTHOR("engstk <eng.stk@sapo.pt>");
-MODULE_DESCRIPTION("'dyn_hotplug' - A dynamic hotplug driver for mako / hammerhead / shamu (blu_plug)");
+MODULE_AUTHOR("Nutcasev1.5 <win.api_10@outlook.com>");
+MODULE_DESCRIPTION("'dyn_hotplug' - A dynamic hotplug driver for mako / hammerhead / shamu / Z00X (blu_plug)");
 MODULE_LICENSE("GPLv2");
 
 late_initcall(dyn_hp_init);
