@@ -28,15 +28,14 @@
 #include <linux/slab.h>
 #include <linux/earlysuspend.h>
 
-#define INIT_DELAY		90000 /* All cores online for 90 Seconds During Boot */
-#define DELAY			500
+#define INIT_DELAY		10000 /* All cores online for 10 Seconds After Enable */
+#define DELAY			(INIT_DELAY/10)
 #define UP_THRESHOLD		80
 #define MIN_ONLINE		2
 #define MAX_ONLINE		4
-#define DEF_DOWN_TIMER_CNT	6 /* 3 Seconds */
-#define DEF_UP_TIMER_CNT	2 /* 1 Second */
+#define DEF_DOWN_TIMER_CNT	1 /* 1 Second */
+#define DEF_UP_TIMER_CNT	2 /* 2 Seconds */
 #define MAX_CORES_SCREENOFF     2
-#define DEF_PLUG_THRESHOLD      70
 #define BLU_PLUG_ENABLED	0
 
 static unsigned int blu_plug_enabled = BLU_PLUG_ENABLED;
