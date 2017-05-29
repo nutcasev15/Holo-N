@@ -26,9 +26,7 @@
 #include <linux/cpufreq.h>
 #include <linux/delay.h>
 #include <linux/slab.h>
-#ifdef CONFIG_STATE_NOTIFIER
-#include <linux/state_notifier.h>
-#endif
+#include <linux/earlysuspend.h>
 
 #define INIT_DELAY		90000 /* All cores online for 90 Seconds During Boot */
 #define DELAY			500
@@ -147,10 +145,12 @@ static void load_timer(struct work_struct *work)
 	queue_delayed_work_on(0, dyn_workq, &dyn_work, msecs_to_jiffies(delay));
 }
 
-#ifdef CONFIG_STATE_NOTIFIER
-static void blu_plug_suspend(void)
+
+static void __cpuinit blu_plug_suspend(struct early_suspend *h)
 {
-	int cpu;
+#if DEBUG
+	printk("%s: Suspending Operations", __func__);
+#endif
 
 	cancel_delayed_work_sync(&dyn_work);
 
@@ -158,7 +158,7 @@ static void blu_plug_suspend(void)
 		down_one();
 }
 
-static void blu_plug_resume(void)
+static void __cpuinit blu_plug_resume(struct early_suspend *h)
 {
 #if DEBUG
 	printk("%s: Starting Operations", __func__);
@@ -169,26 +169,11 @@ static void blu_plug_resume(void)
 	queue_delayed_work_on(0, dyn_workq, &dyn_work, msecs_to_jiffies(delay));
 }
 
-static int state_notifier_callback(struct notifier_block *this,
-				unsigned long event, void *data)
-{
-	if (!blu_plug_enabled)
-		return NOTIFY_OK;
-
-	switch (event) {
-		case STATE_NOTIFIER_ACTIVE:
-			blu_plug_resume();
-			break;
-		case STATE_NOTIFIER_SUSPEND:
-			blu_plug_suspend();
-			break;
-		default:
-			break;
-	}
-
-	return NOTIFY_OK;
-}
-#endif
+static struct early_suspend screen_state __refdata = {
+	.level = EARLY_SUSPEND_LEVEL_BLANK_SCREEN,
+	.suspend = blu_plug_suspend,
+	.resume = blu_plug_resume,
+};
 
 /******************** Module parameters *********************/
 
@@ -377,9 +362,7 @@ static void __ref dyn_hp_exit(void)
 {
 	cancel_delayed_work_sync(&dyn_work);
 
-#ifdef CONFIG_STATE_NOTIFIER
-	state_unregister_client(&notify);
-#endif
+	unregister_early_suspend(&screen_state);
 
 	destroy_workqueue(dyn_workq);
 
