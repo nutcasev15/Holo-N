@@ -211,7 +211,7 @@ static int set_min_online(const char *val, const struct kernel_param *kp)
 	if (ret)
 		return -EINVAL;
 
-	if (i < 1 || i > max_online || i > max_cores)
+	if (i < 1 || i > max_cores_screenoff)
 		return -EINVAL;
 
 	min_online = i;
