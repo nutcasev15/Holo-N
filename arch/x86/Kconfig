@@ -514,8 +514,13 @@ config X86_MDFLD
 config BLU_PLUG
     bool "Dynamic Hotplug driver"
     depends on HOTPLUG_CPU
+	depends on HAS_EARLYSUSPEND
     help
       The Dynamic hotplug driver automatically online/offline CPUs proportional to system load.
+
+config BLU_PLUG_DEBUG
+	bool "Dynamic Hotplug debug"
+	depends on BLU_PLUG
 
 config ATOM_SOC_POWER
 	bool "Select Atom SOC Power"

@@ -13,7 +13,7 @@
  *
  */
 
-#define DEBUG 0
+#define DEBUG CONFIG_BLU_PLUG_DEBUG
 #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
 
 #include <linux/kernel.h>
