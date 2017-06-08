@@ -272,4 +272,10 @@ endif # NETWORK_FILESYSTEMS
 source "fs/nls/Kconfig"
 source "fs/dlm/Kconfig"
 
+config GHOST_SYNC
+	bool "Ghost Level Syncing"
+	depends on HAS_EARLYSUSPEND
+	help
+	  Fool the System into not syncing the filesystems while screen is on.
+
 endmenu
