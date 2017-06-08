@@ -53,7 +53,6 @@ static unsigned int max_cores;
 
 static struct delayed_work dyn_work;
 static struct workqueue_struct *dyn_workq;
-static struct notifier_block notify;
 
 /* Iterate through possible CPUs and bring online the first offline found */
 static void __ref up_one(void)
@@ -342,7 +341,7 @@ static int set_delay(const char *val, const struct kernel_param *kp)
 	if (ret)
 		return -EINVAL;
 
-	if (i < (INIT_DELAY/100) || i > INIT_DELAY)
+	if (i < (INIT_DELAY/100) || i > DELAY)
 		return -EINVAL;
 
 	delay = i;
@@ -436,5 +435,5 @@ MODULE_AUTHOR("Nutcasev1.5 <win.api_10@outlook.com>");
 MODULE_DESCRIPTION("'dyn_hotplug' - A dynamic hotplug driver for mako / hammerhead / shamu / Z00X (blu_plug)");
 MODULE_LICENSE("GPLv2");
 
-late_initcall(dyn_hp_init);
+module_init(dyn_hp_init);
 module_exit(dyn_hp_exit);
