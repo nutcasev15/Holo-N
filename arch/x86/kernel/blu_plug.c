@@ -146,6 +146,8 @@ static void load_timer(struct work_struct *work)
 
 static void __cpuinit blu_plug_suspend(struct early_suspend *h)
 {
+	if (!blu_plug_enabled)
+		return;
 #if DEBUG
 	printk("%s: Suspending Operations", __func__);
 #endif
@@ -158,6 +160,8 @@ static void __cpuinit blu_plug_suspend(struct early_suspend *h)
 
 static void __cpuinit blu_plug_resume(struct early_suspend *h)
 {
+	if (!blu_plug_enabled)
+		return;
 #if DEBUG
 	printk("%s: Starting Operations", __func__);
 #endif
@@ -358,14 +362,8 @@ module_param_cb(delay, &delay_ops, &delay, 0644);
 
 /***************** end of module parameters *****************/
 
-static int dyn_hp_init(void)
+static int dyn_hp_start(void)
 {
-	if (!blu_plug_enabled)
-		return 0;
-
-	register_early_suspend(&screen_state);
-	max_cores = num_possible_cpus();
-
 	dyn_workq = alloc_workqueue("dyn_hotplug_workqueue", WQ_HIGHPRI | WQ_FREEZABLE, 0);
 	if (!dyn_workq)
 		return -ENOMEM;
@@ -375,6 +373,16 @@ static int dyn_hp_init(void)
 
 	printk("%s: activated\n", __func__);
 
+	return 0;
+}
+
+static int __init dyn_hp_init(void)
+{
+	register_early_suspend(&screen_state);
+	max_cores = num_possible_cpus();
+
+	if (blu_plug_enabled)
+		dyn_hp_start();
 	return 0;
 }
 
@@ -408,14 +416,14 @@ static int set_enabled(const char *val, const struct kernel_param *kp)
 
 	if (i < 0 || i > 1)
 		return -EINVAL;
-		
+
 	if (i == blu_plug_enabled)
 		return ret;
 
 	blu_plug_enabled = i;
 
 	if (blu_plug_enabled)
-		ret = dyn_hp_init();
+		ret = dyn_hp_start();
 	else
 		dyn_hp_exit();
 
