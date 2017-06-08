@@ -376,22 +376,9 @@ static int dyn_hp_start(void)
 	return 0;
 }
 
-static int __init dyn_hp_init(void)
-{
-	register_early_suspend(&screen_state);
-	max_cores = num_possible_cpus();
-
-	if (blu_plug_enabled)
-		dyn_hp_start();
-	return 0;
-}
-
-static void __ref dyn_hp_exit(void)
+static void dyn_hp_stop(void)
 {
 	cancel_delayed_work_sync(&dyn_work);
-
-	unregister_early_suspend(&screen_state);
-
 	destroy_workqueue(dyn_workq);
 
 	/* Wake up all the sibling cores */
@@ -402,6 +389,22 @@ static void __ref dyn_hp_exit(void)
 #endif
 
 	printk("%s: deactivated\n", __func__);
+}
+
+static int __init dyn_hp_init(void)
+{
+	register_early_suspend(&screen_state);
+	max_cores = num_possible_cpus();
+
+	if (blu_plug_enabled)
+		dyn_hp_start();
+
+	return 0;
+}
+
+static void __ref dyn_hp_exit(void)
+{
+	unregister_early_suspend(&screen_state);
 }
 
 /* enabled */
@@ -425,7 +428,7 @@ static int set_enabled(const char *val, const struct kernel_param *kp)
 	if (blu_plug_enabled)
 		ret = dyn_hp_start();
 	else
-		dyn_hp_exit();
+		dyn_hp_stop();
 
 	return ret;
 }
