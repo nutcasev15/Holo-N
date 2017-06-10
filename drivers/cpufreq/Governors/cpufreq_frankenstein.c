@@ -33,11 +33,29 @@
 #include <linux/kernel_stat.h>
 #include <asm/cputime.h>
 
-#define CREATE_TRACE_POINTS
-#include <trace/events/cpufreq_frankenstein.h>
-
 //for adding early suspend and late resume handlers
 #include <linux/earlysuspend.h>
+
+/* Suspend/Resume Code */
+static bool suspended;
+static void gov_suspend(struct early_suspend *h)
+{
+	suspended = true;
+}
+
+static void gov_resume(struct early_suspend *h)
+{
+	suspended = false;
+}
+
+static struct early_suspend gov_suspend_handler __refdata = {
+	.level = EARLY_SUSPEND_LEVEL_BLANK_SCREEN,
+	.suspend = gov_suspend,
+	.resume = gov_resume,
+};
+
+#define CREATE_TRACE_POINTS
+#include <trace/events/cpufreq_frankenstein.h>
 #include <linux/wait.h>
 
 struct cpufreq_frankenstein_cpuinfo {
@@ -278,9 +296,14 @@ static unsigned int choose_freq(struct cpufreq_frankenstein_cpuinfo *pcpu,
 	unsigned int prevfreq, freqmin, freqmax;
 	unsigned int tl;
 	int index;
+	struct cpufreq_frankenstein_tunables *tunables = pcpu->policy->governor_data;
 
 	freqmin = 0;
 	freqmax = UINT_MAX;
+
+	// Override This function if Suspended && Touchboost delay is Equal to 1
+	if (suspended && tunables->touchboostpulse_duration_val == 1)
+		return (unsigned int)(tunables->touchboost_freq);
 
 	do {
 		prevfreq = freq;
@@ -433,12 +456,12 @@ static void cpufreq_frankenstein_timer(unsigned long data)
 		}
 	} else {
 		new_freq = choose_freq(pcpu, loadadjfreq);
-		if (now < tunables->touchboostpulse_endtime) {
+		if (now < tunables->touchboostpulse_endtime && !suspended) {
 			if (new_freq < tunables->touchboost_freq)
 				new_freq = tunables->touchboost_freq;
 			}
 		if (new_freq > tunables->hispeed_freq &&
-				pcpu->target_freq < tunables->hispeed_freq)
+				pcpu->target_freq < tunables->hispeed_freq && !suspended)
 			new_freq = tunables->hispeed_freq;
 	}
 
@@ -462,7 +485,10 @@ static void cpufreq_frankenstein_timer(unsigned long data)
 		goto rearm;
 	}
 
-	new_freq = pcpu->freq_table[index].frequency;
+	if (suspended && tunables->touchboostpulse_duration_val == 1)
+		new_freq = (unsigned int)(tunables->touchboost_freq);
+	else
+		new_freq = pcpu->freq_table[index].frequency;
 
 	/*
 	 * Do not scale below floor_freq unless we have been at or above the
@@ -1362,7 +1388,7 @@ static int cpufreq_governor_frankenstein(struct cpufreq_policy *policy,
 			idle_notifier_register(&cpufreq_frankenstein_idle_nb);
 			cpufreq_register_notifier(&cpufreq_notifier_block,
 					CPUFREQ_TRANSITION_NOTIFIER);
-			register_early_suspend(&hotplug_auxcpus_desc);
+			register_early_suspend(&gov_suspend_handler);
 		}
 
 		break;
@@ -1373,7 +1399,7 @@ static int cpufreq_governor_frankenstein(struct cpufreq_policy *policy,
 				cpufreq_unregister_notifier(&cpufreq_notifier_block,
 						CPUFREQ_TRANSITION_NOTIFIER);
 				idle_notifier_unregister(&cpufreq_frankenstein_idle_nb);
-				unregister_early_suspend(&hotplug_auxcpus_desc);
+				unregister_early_suspend(&gov_suspend_handler);
 			}
 
 			sysfs_remove_group(get_governor_parent_kobj_static(policy),
