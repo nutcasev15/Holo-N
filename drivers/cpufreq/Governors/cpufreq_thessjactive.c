@@ -36,9 +36,50 @@
 #include <asm/cputime.h>
 
 //for adding early suspend and late resume handlers
+#include <linux/earlysuspend.h>
+/* Suspend/Resume Code */
+static bool suspended;
+static void __cpuinit early_suspend_offline_cpus(struct early_suspend *h)
+{
+	#ifdef GOVDEBUG
+	printk("entered early_suspend handler in thessjactive");
+	#else
+	unsigned int cpu;
+	for_each_online_cpu(cpu)
+	{
+		if (cpu > 1 && num_online_cpus() > 2) {
+			//get 2 cores down; cores 3 and 4
+			cpu_down(cpu);
+		}
+	}
+	#endif
+	suspended = true;
+}
+
+static void __cpuinit late_resume_online_cpus(struct early_suspend *h)
+{
+	#ifdef GOVDEBUG
+	printk("entered late_resume handler in thessjactive");
+	#else
+	unsigned int cpu;
+
+	for_each_possible_cpu(cpu)
+	{
+		if (!cpu_online(cpu) && num_online_cpus() < 4) //get all up
+			cpu_up(cpu);
+	}
+	#endif
+	suspended = false;
+}
+
+static struct early_suspend hotplug_auxcpus_desc __refdata = {
+	.level = EARLY_SUSPEND_LEVEL_DISABLE_FB,
+	.suspend = early_suspend_offline_cpus,
+	.resume = late_resume_online_cpus,
+};
+
 //easy debug switch
 //#define GOVDEBUG
-#include <linux/earlysuspend.h>
 #include <linux/wait.h>
 
 #define CREATE_TRACE_POINTS
@@ -150,48 +191,6 @@ struct cpufreq_thessjactive_tunables {
 static struct cpufreq_thessjactive_tunables *common_tunables;
 static struct kobject *get_governor_parent_kobj_static(struct cpufreq_policy *policy);
 static struct attribute_group *get_sysfs_attr(void);
-
-/* Suspend/Resume Code */
-static const int cap_freq = 666000;
-static bool suspended;
-static void __cpuinit early_suspend_offline_cpus(struct early_suspend *h)
-{
-	#ifdef GOVDEBUG
-	printk("entered early_suspend handler in thessjactive");
-	#else
-	unsigned int cpu;
-	for_each_online_cpu(cpu)
-	{
-		if (cpu > 1 && num_online_cpus() > 2) {
-			//get 2 cores down; cores 3 and 4
-			cpu_down(cpu);
-		}
-	}
-	#endif
-	suspended = true;
-}
-
-static void __cpuinit late_resume_online_cpus(struct early_suspend *h)
-{
-	#ifdef GOVDEBUG
-	printk("entered late_resume handler in thessjactive");
-	#else
-	unsigned int cpu;
-	
-	for_each_possible_cpu(cpu)
-	{
-		if (!cpu_online(cpu) && num_online_cpus() < 4) //get all up 
-			cpu_up(cpu);
-	}
-	#endif
-	suspended = false;
-}
-
-static struct early_suspend hotplug_auxcpus_desc __refdata = {
-	.level = EARLY_SUSPEND_LEVEL_BLANK_SCREEN,
-	.suspend = early_suspend_offline_cpus,
-	.resume = late_resume_online_cpus,
-};
 
 #ifdef CONFIG_IRQ_TIME_ACCOUNTING
 DECLARE_PER_CPU(u64, cpu_hardirq_time);
@@ -360,18 +359,18 @@ static unsigned int freq_to_targetload(
 static unsigned int choose_freq(struct cpufreq_thessjactive_cpuinfo *pcpu,
 		unsigned int loadadjfreq)
 {
-	// Override This function if Suspended
-	if (suspended) {
-		return cap_freq;
-	}
-
 	unsigned int freq = pcpu->policy->cur;
 	unsigned int prevfreq, freqmin, freqmax;
 	unsigned int tl;
 	int index;
+	struct cpufreq_thessjactive_tunables *tunables = pcpu->policy->governor_data;
 
 	freqmin = 0;
 	freqmax = UINT_MAX;
+
+	// Override This function if Suspended && Touchboost delay is Equal to 1
+	if (suspended && tunables->touchboostpulse_duration_val == 1)
+		return (unsigned int)(tunables->touchboost_freq);
 
 	do {
 		prevfreq = freq;
@@ -607,8 +606,8 @@ static void cpufreq_thessjactive_timer(unsigned long data)
 		goto rearm;
 	}
 
-	if (suspended)
-		new_freq = cap_freq;
+	if (suspended && tunables->touchboostpulse_duration_val == 1)
+		new_freq = (unsigned int)(tunables->touchboost_freq);
 	else
 		new_freq = pcpu->freq_table[index].frequency;
 
