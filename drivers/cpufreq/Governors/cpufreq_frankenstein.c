@@ -13,8 +13,6 @@
  * GNU General Public License for more details.
  *
  * Author: Mike Chan (mike@android.com)
- * Modified for early suspend support and hot plugging by say99 (sayeed99@live.com)
- * great thanks to TheSSJ
  *
  */
 
@@ -1292,44 +1290,6 @@ static int cpufreq_frankenstein_idle_notifier(struct notifier_block *nb,
 
 static struct notifier_block cpufreq_frankenstein_idle_nb = {
 	.notifier_call = cpufreq_frankenstein_idle_notifier,
-};
-
-static void __cpuinit early_suspend_offline_cpus(struct early_suspend *h)
-{
-	#ifdef GOVDEBUG
-	printk("entered early_suspend handler in frankenstein");
-	#else
-	unsigned int cpu;
-	for_each_possible_cpu(cpu)
-	{
-		if (cpu<2) //begin offline work at core 3
-			continue;
-		
-		if (cpu_online(cpu) && num_online_cpus() > 2) //get 2 cores down, cores 3 and 4 
-			cpu_down(cpu);
-	}
-	#endif
-}
-
-static void __cpuinit late_resume_online_cpus(struct early_suspend *h)
-{
-	#ifdef GOVDEBUG
-	printk("entered late_resume handler in frankenstein");
-	#else
-	unsigned int cpu;
-	
-	for_each_possible_cpu(cpu)
-	{
-		if (!cpu_online(cpu) && num_online_cpus() < 4) //get all up 
-			cpu_up(cpu);
-	}
-	#endif
-}
-
-static struct early_suspend hotplug_auxcpus_desc __refdata = {
-	.level = EARLY_SUSPEND_LEVEL_BLANK_SCREEN,
-	.suspend = early_suspend_offline_cpus,
-	.resume = late_resume_online_cpus,
 };
 
 static int cpufreq_governor_frankenstein(struct cpufreq_policy *policy,
