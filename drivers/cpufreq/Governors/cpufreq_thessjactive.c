@@ -39,12 +39,19 @@
 #include <linux/earlysuspend.h>
 /* Suspend/Resume Code */
 static bool suspended;
+static unsigned int plug = 0;
 static void __cpuinit early_suspend_offline_cpus(struct early_suspend *h)
 {
 	#ifdef GOVDEBUG
 	printk("entered early_suspend handler in thessjactive");
 	#else
 	unsigned int cpu;
+
+	suspended = true;
+
+	if (plug != 1)
+		return;
+
 	for_each_online_cpu(cpu)
 	{
 		if (cpu > 1 && num_online_cpus() > 2) {
@@ -53,7 +60,6 @@ static void __cpuinit early_suspend_offline_cpus(struct early_suspend *h)
 		}
 	}
 	#endif
-	suspended = true;
 }
 
 static void __cpuinit late_resume_online_cpus(struct early_suspend *h)
@@ -63,13 +69,17 @@ static void __cpuinit late_resume_online_cpus(struct early_suspend *h)
 	#else
 	unsigned int cpu;
 
+	suspended = false;
+
+	if (plug != 1)
+		return;
+
 	for_each_possible_cpu(cpu)
 	{
 		if (!cpu_online(cpu) && num_online_cpus() < 4) //get all up
 			cpu_up(cpu);
 	}
 	#endif
-	suspended = false;
 }
 
 static struct early_suspend hotplug_auxcpus_desc __refdata = {
@@ -1236,6 +1246,7 @@ static ssize_t store_boostpulse_duration(struct cpufreq_thessjactive_tunables
 		return ret;
 
 	tunables->boostpulse_duration_val = val;
+	plug = val;
 	return count;
 }
 
@@ -1570,6 +1581,7 @@ static int cpufreq_governor_thessjactive(struct cpufreq_policy *policy,
 		tunables->boostpulse_duration_val = DEFAULT_MIN_SAMPLE_TIME;
 		tunables->touchboostpulse_duration_val =
 				DEFAULT_MIN_SAMPLE_TIME;
+		plug = DEFAULT_MIN_SAMPLE_TIME;
 		tunables->timer_slack_val = DEFAULT_TIMER_SLACK;
 #ifdef CONFIG_IRQ_TIME_ACCOUNTING
 		tunables->irq_load_threshold_val = DEFAULT_IRQ_LOAD_THRESHOLD;
