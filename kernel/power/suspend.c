@@ -218,6 +218,7 @@ void __attribute__ ((weak)) arch_suspend_enable_irqs(void)
  */
 static int suspend_enter(suspend_state_t state, bool *wakeup)
 {
+	unsigned long next_jiffy;
 	char suspend_abort[MAX_SUSPEND_ABORT_LEN];
 	int error, last_dev;
 
@@ -262,6 +263,14 @@ static int suspend_enter(suspend_state_t state, bool *wakeup)
 		log_suspend_abort_reason("Disabling non-boot cpus failed");
 		goto Enable_cpus;
 	}
+
+	/*
+	 * There is a race condition with tick_sched timer
+	 * in case we disable hw irqs while local timer interrupt is pending
+	 * To avoid it, we just wait for the next tick
+	 */
+	next_jiffy = jiffies +1;
+	while (time_before(jiffies, next_jiffy));
 
 	arch_suspend_disable_irqs();
 	BUG_ON(!irqs_disabled());
