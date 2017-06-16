@@ -271,15 +271,16 @@ void dwc3_gadget_giveback(struct dwc3_ep *dep, struct dwc3_request *req,
 	if (req->request.status == -EINPROGRESS)
 		req->request.status = status;
 
-	if (dwc->ep0_bounced && dep->number == 0)
+	if (dwc->ep0_bounced && dep->number <= 1)
 		dwc->ep0_bounced = false;
-	else if (!dep->ebc) {
+	    usb_gadget_unmap_request(&dwc->gadget, &req->request,
+			    req->direction);
+
+	if (!dep->ebc) {
 		if (req->roundup_size) {
 			req->request.length -= req->roundup_size;
 			req->roundup_size = 0;
 		}
-		usb_gadget_unmap_request(&dwc->gadget, &req->request,
-				req->direction);
 	}
 
 	dev_dbg(dwc->dev, "request %p from %s completed %d/%d ===> %d\n",
