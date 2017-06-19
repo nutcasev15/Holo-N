@@ -5,8 +5,8 @@ echo "Current Date : $NOW"
 echo "Applying Build Settings"
 
 export ARCH=x86_64
-export CCOMPILE=$CROSS_COMPILE
 export CROSS_COMPILE=x86_64-linux-
+export CCOMPILE=$CROSS_COMPILE
 
 #CONFIGS
 export SLEEP=1
@@ -30,37 +30,36 @@ export KBUILD_BUILD_VERSION="0"
 
 #Build
 echo "Checking for Previous Compiled Files"
-if [ -e "arch/x86/kernel/process_64.o" ];
+if [ -e "arch/x86/kernel/asm-offsets.s" ];
 then
 	echo "Cleaning Out Compiled Files"
-	make clean
+    if [[ "$(git -C ./ rev-parse)" != "" ]];
+    then
+	    make clean
+    else
+        git clean -fXq
+    fi
 	sleep 1
 	rm -f .config*old
-if [ -f log_*.log ];
-then
-	echo "Build Logs Will Be Deleted"
-	sleep 3
-	rm -f log*.log
-else
-	printf "All Files Cleared\n"
-fi
+    if [ -f log_*.log ];
+    then
+	    echo "Build Logs Will Be Deleted"
+	    sleep 3
+	    rm -f log*.log
+    else
+	    printf "All Files Cleared\n"
+    fi
 fi
 printf "#### Enviroment Setup Complete ####\n\n"
 sleep 2
 echo "#### Building ####"
 sleep $SLEEP
-if [ -f .config ];
+echo "Compiling From $DEFCONFIG"
+if [[ "$logs" > 0 ]];
 then
-   echo "Continuing To Compiler"
+	make $DEFCONFIG $EV -j24 2>&1 | tee log_"$start".log
 else
-   echo ".config Does Not Exist"
-   echo "Compiling From $DEFCONFIG"
-   if [[ "$logs" > 0 ]];
-	then
-		make $DEFCONFIG $EV -j24 2>&1 | tee log_"$start".log
-	else
-		make $DEFCONFIG $EV -j24
-	fi
+	make $DEFCONFIG $EV -j24
 fi
 #
 if [[ "$logs" > 0 ]];
