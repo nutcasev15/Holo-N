@@ -640,6 +640,10 @@ void __pm_wakeup_event(struct wakeup_source *ws, unsigned int msec)
 
 	wakeup_source_report_event(ws);
 
+	// Regulate Wake Time
+	if (ktime_to_ms(ws->total_time) > 900000 || ws->active_count > 8)
+		msec = ((msec * 3) / 5);
+
 	if (!msec) {
 		wakeup_source_deactivate(ws);
 		goto unlock;
