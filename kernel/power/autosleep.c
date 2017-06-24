@@ -30,7 +30,7 @@ static void try_to_suspend(struct work_struct *work)
 	if (!pm_get_wakeup_count(&initial_count, true))
 		goto out;
 
-	mutex_lock(&autosleep_lock);
+	mutex_lock_interruptible(&autosleep_lock);
 
 	if (!pm_save_wakeup_count(initial_count) ||
 		system_state != SYSTEM_RUNNING) {
