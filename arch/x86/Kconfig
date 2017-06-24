@@ -519,7 +519,8 @@ config BLU_PLUG
       The Dynamic hotplug driver automatically online/offline CPUs proportional to system load.
 
 config BLU_PLUG_DEBUG
-	bool "Dynamic Hotplug debug"
+	int "Dynamic Hotplug debug"
+	default 0
 	depends on BLU_PLUG
 
 config ATOM_SOC_POWER
