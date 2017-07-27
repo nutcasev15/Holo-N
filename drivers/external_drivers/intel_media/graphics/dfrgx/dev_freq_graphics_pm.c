@@ -26,11 +26,48 @@
  */
 
 #include <rgxdf.h>
+#include <linux/kernel.h>
+#include <linux/earlysuspend.h>
+#include <linux/module.h>
 #include "dev_freq_graphics_pm.h"
 #include "dev_freq_debug.h"
 
 /*dfrgx copy of RGX power state ON/OFF*/
 static int df_rgx_active = 0;
+
+/* Screen Check Code */
+static int gfx_screen_check = -1;
+static void gfx_screen_online(struct early_suspend *h)
+{
+	gfx_screen_check = 1;
+}
+
+static void gfx_screen_offline(struct early_suspend *h)
+{
+	gfx_screen_check = 0;
+}
+
+static struct early_suspend gfx_check __refdata =
+{
+	.level = EARLY_SUSPEND_LEVEL_DISABLE_FB,
+	.suspend = gfx_screen_offline,
+	.resume = gfx_screen_online,
+};
+
+static int gfx_screen_hook(void)
+{
+	register_early_suspend(&gfx_check);
+
+	return 0;
+}
+
+static void gfx_screen_unhook(void)
+{
+	unregister_early_suspend(&gfx_check);
+}
+
+late_initcall(gfx_screen_hook);
+module_exit(gfx_screen_unhook);
 
 /**
  * df_rgx_is_active() - Determines if RGX device
@@ -41,10 +78,13 @@ int df_rgx_is_active(void)
 	DFRGX_DPF(DFRGX_DEBUG_LOW, "%s\n",
 		__func__);
 
+	if (gfx_screen_check == -1)
+		gfx_screen_check = 1;
+
 	/*Initially We need to know the state of RGX ON/OFF,
 	 *then We keep a local copy of it
 	*/
-	if (rgx_is_device_powered()) {
+	if (rgx_is_device_powered() && gfx_screen_check) {
 		DFRGX_DPF(DFRGX_DEBUG_MED, "%s: RGX is Powered ON\n",
 		__func__);
 		df_rgx_active = 1;
