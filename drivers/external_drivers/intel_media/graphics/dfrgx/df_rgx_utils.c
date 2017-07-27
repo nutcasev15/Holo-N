@@ -32,7 +32,7 @@ extern int gpu_freq_get_max_fuse_setting(void);
 
 struct gpu_freq_thresholds a_governor_profile[] = {
 			/* low, high thresholds for SimpleOndemand profile */
-			{75, 87},
+			{65, 87},
 			/* low, high thresholds for Power Save profile*/
 			{78, 92},
 			/* low, high Performance thresholds */
@@ -109,10 +109,13 @@ unsigned int df_rgx_request_burst(struct df_rgx_data_s *pdfrgx_data,
 	unsigned int burst = DFRGX_NO_BURST_REQ;
 	unsigned int th_high_util;
 	unsigned int th_low_util;
+	unsigned int offset;
 
 	new_index = df_rgx_get_util_record_index_by_freq(freq);
-	th_high_util = a_governor_profile[pdfrgx_data->g_profile_index].util_th_high + ((-1)^current_index)*(freq/200000);
-	th_low_util = a_governor_profile[pdfrgx_data->g_profile_index].util_th_low + ((-1)^current_index)*(freq/200000);
+	offset = (3 * (freq / a_available_state_freq[pdfrgx_data->g_min_freq_index].freq));
+
+	th_high_util = a_governor_profile[pdfrgx_data->g_profile_index].util_th_high + offset;
+	th_low_util = a_governor_profile[pdfrgx_data->g_profile_index].util_th_low + offset;
 
 	if (new_index < 0)
 		goto out;
