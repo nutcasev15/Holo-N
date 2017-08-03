@@ -140,7 +140,11 @@ static int enter_dsr_locked(struct mdfld_dsi_config *dsi_config, int level)
 	err = mdfld_dsi_wait_for_fifos_empty(sender);
 	if (err) {
 		DRM_ERROR("mdfld_dsi_dsr: FIFO not empty\n");
-		return err;
+		/*
+		 * w/a: do not return here in case of error because we want
+		 * to turn off everything to have a chance to recover from
+		 * a dbi hang.
+		 */
 	}
 
 	dsr = dsi_config->dsr;
@@ -159,7 +163,7 @@ static int enter_dsr_locked(struct mdfld_dsi_config *dsi_config, int level)
 	__dbi_power_off(dsi_config, true);
 
 	PSB_DEBUG_ENTRY("entered\n");
-	return 0;
+	return err;
 }
 
 static void dsr_power_off_work(struct work_struct *work)
