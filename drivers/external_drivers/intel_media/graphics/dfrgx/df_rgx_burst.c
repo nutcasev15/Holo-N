@@ -315,7 +315,7 @@ static void dfrgx_add_sample_data(struct df_rgx_data_s *g_dfrgx,
 				__func__, a_available_state_freq[g_dfrgx->gpu_utilization_record_index].freq);
 
 			}
-		} else if (g_dfrgx->gpu_utilization_record_index != g_dfrgx->g_min_freq_index) {
+		} else if (!df_rgx_is_active() && g_dfrgx->gpu_utilization_record_index != g_dfrgx->g_min_freq_index) {
 			set_desired_frequency_khz(g_dfrgx->bus_freq_data,
 				a_available_state_freq[g_dfrgx->g_min_freq_index].freq);
 		}

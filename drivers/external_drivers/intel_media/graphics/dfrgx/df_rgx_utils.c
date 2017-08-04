@@ -109,15 +109,13 @@ unsigned int df_rgx_request_burst(struct df_rgx_data_s *pdfrgx_data,
 	unsigned int burst = DFRGX_NO_BURST_REQ;
 	unsigned int th_high_util;
 	unsigned int th_low_util;
-	unsigned int offset;
 
 	new_index = df_rgx_get_util_record_index_by_freq(freq);
-	offset = (3 * (freq / a_available_state_freq[pdfrgx_data->g_min_freq_index].freq));
 
-	th_high_util = a_governor_profile[pdfrgx_data->g_profile_index].util_th_high + offset;
-	th_low_util = a_governor_profile[pdfrgx_data->g_profile_index].util_th_low + offset;
+	th_high_util = a_governor_profile[pdfrgx_data->g_profile_index].util_th_high;
+	th_low_util = a_governor_profile[pdfrgx_data->g_profile_index].util_th_low;
 
-	if (new_index < 0)
+	if (unlikely(new_index < 0))
 		goto out;
 
 	/* Decide unburst/burst based on utilization*/
