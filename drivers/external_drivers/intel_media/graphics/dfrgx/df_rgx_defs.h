@@ -201,6 +201,8 @@ static const struct gpu_utilization_record a_available_state_freq[] = {
 unsigned int df_rgx_is_valid_freq(unsigned long int freq);
 unsigned int df_rgx_request_burst(struct df_rgx_data_s *pdfrgx_data,
 					int util_percentage);
+unsigned int df_rgx_ondemand_burst(struct df_rgx_data_s *pdfrgx_data,
+					int util_percentage);
 int df_rgx_get_util_record_index_by_freq(unsigned long freq);
 long df_rgx_set_freq_khz(struct busfreq_data *bfdata,
 				unsigned long freq_khz);

@@ -26,6 +26,7 @@
  */
 #include "df_rgx_defs.h"
 #include "dev_freq_debug.h"
+#include "dev_freq_graphics_pm.h"
 
 extern int is_tng_a0;
 extern int gpu_freq_get_max_fuse_setting(void);
@@ -40,6 +41,18 @@ struct gpu_freq_thresholds a_governor_profile[] = {
 			/* low, high Custom (SimpleOndemand Old) */
 			{67, 85}
 			};
+
+struct gpu_freq_thresholds simple_ondemand_loads[] = {
+	{35, 35}, /* 200 Mhz */
+	{40, 40}, /* 213 Mhz */
+	{50, 50}, /* 266 Mhz */
+	{64, 64}, /* 320 Mhz */
+	{72, 72}, /* 355 Mhz */
+	{80, 80}, /* 400 Mhz */
+	{88, 88}, /* 457 Mhz */
+	{90, 90}  /* 533 Mhz */
+};
+
 /**
  * df_rgx_is_valid_freq() - Determines if We are about to use
  * a valid frequency.
@@ -132,6 +145,64 @@ unsigned int df_rgx_request_burst(struct df_rgx_data_s *pdfrgx_data,
 		pdfrgx_data->gpu_utilization_record_index = pdfrgx_data->g_min_freq_index;
 		burst = DFRGX_UNBURST_REQ;
 	}
+
+out:
+	return burst;
+}
+
+/**
+ * df_rgx_ondemand_burst() - Decides if dfrgx needs to BURST, UNBURST
+ * or keep the current frequency level with simple_ondemand gov.
+ * @pdfrgx_data: Dynamic turbo information
+ * @util_percentage: percentage of utilization in active state.
+ * Function return value: DFRGX_NO_BURST_REQ, DFRGX_BURST_REQ,
+ * DFRGX_UNBURST_REQ.
+ */
+unsigned int df_rgx_ondemand_burst(struct df_rgx_data_s *pdfrgx_data,
+			int util_percentage)
+{
+	unsigned int burst = DFRGX_NO_BURST_REQ;
+	int i;
+	int target_index = -1; /* Check For Modification (Impossible Value) */
+	int current_index;
+
+	/* Check If Current Freq Is Valid */
+	current_index =
+	df_rgx_get_util_record_index_by_freq(a_available_state_freq[pdfrgx_data->gpu_utilization_record_index].freq);
+
+	if (unlikely(current_index < 0))
+		goto out;
+
+	/* Check For Change Requirement */
+	if (unlikely(util_percentage >= simple_ondemand_loads[current_index].util_th_high
+	&& (current_index + 1) <= pdfrgx_data->g_max_freq_index
+	&& util_percentage < simple_ondemand_loads[current_index + 1].util_th_high)
+	||
+	unlikely(current_index == pdfrgx_data->g_max_freq_index
+	&& util_percentage >= simple_ondemand_loads[current_index].util_th_high))
+		goto out;
+
+	/* Throttling Code */
+	if (current_index < pdfrgx_data->g_min_freq_index
+	|| util_percentage < simple_ondemand_loads[pdfrgx_data->g_min_freq_index].util_th_high
+	|| !df_rgx_is_active()) {
+		pdfrgx_data->gpu_utilization_record_index = pdfrgx_data->g_min_freq_index;
+		burst = DFRGX_UNBURST_REQ;
+		goto out;
+	}
+
+	for (i = pdfrgx_data->g_max_freq_index; i >= pdfrgx_data->g_min_freq_index; i--) {
+		if (unlikely(util_percentage >= simple_ondemand_loads[i].util_th_high)) {
+			target_index = i;
+			burst = DFRGX_BURST_REQ;
+			break;
+		}
+	}
+
+	if (unlikely(target_index == -1))
+		goto out;
+
+	pdfrgx_data->gpu_utilization_record_index = target_index;
 
 out:
 	return burst;
