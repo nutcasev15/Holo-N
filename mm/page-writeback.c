@@ -56,6 +56,8 @@
 
 #define RATELIMIT_CALC_SHIFT	10
 
+#define DIRTY_BACKGROUND_RATIO 11
+
 /*
  * After a CPU has dirtied this many pages, balance_dirty_pages_ratelimited
  * will look to see if it needs to force writeback or throttling.
@@ -67,7 +69,7 @@ static long ratelimit_pages = 32;
 /*
  * Start background writeback (via writeback threads) at this percentage
  */
-int dirty_background_ratio = 10;
+int dirty_background_ratio = DIRTY_BACKGROUND_RATIO;
 
 /*
  * dirty_background_bytes starts at 0 (disabled) so that it is a function of
@@ -84,7 +86,7 @@ int vm_highmem_is_dirtyable;
 /*
  * The generator of dirty data starts writeback at this percentage
  */
-int vm_dirty_ratio = 20;
+int vm_dirty_ratio = 22;
 
 /*
  * vm_dirty_bytes starts at 0 (disabled) so that it is a function of
@@ -370,7 +372,7 @@ int dirty_background_bytes_handler(struct ctl_table *table, int write,
 
 	ret = proc_doulongvec_minmax(table, write, buffer, lenp, ppos);
 	if (ret == 0 && write)
-		dirty_background_ratio = 0;
+		dirty_background_ratio = DIRTY_BACKGROUND_RATIO;
 	return ret;
 }
 
