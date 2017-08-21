@@ -38,7 +38,7 @@
 #include "dfrgx_interface.h"
 #include "dev_freq_attrib.h"
 
-#define MAX_NUM_SAMPLES		18
+#define MAX_NUM_SAMPLES		12
 
 /*Profiling Information - */
 struct gpu_profiling_record a_profiling_info[NUMBER_OF_LEVELS_MAX_FUSE];

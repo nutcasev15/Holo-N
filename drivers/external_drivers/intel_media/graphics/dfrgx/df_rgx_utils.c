@@ -43,14 +43,14 @@ struct gpu_freq_thresholds a_governor_profile[] = {
 			};
 
 struct gpu_freq_thresholds simple_ondemand_loads[] = {
-	{35, 35}, /* 200 Mhz */
-	{40, 40}, /* 213 Mhz */
-	{50, 50}, /* 266 Mhz */
-	{64, 64}, /* 320 Mhz */
-	{72, 72}, /* 355 Mhz */
-	{80, 80}, /* 400 Mhz */
-	{88, 88}, /* 457 Mhz */
-	{90, 90}  /* 533 Mhz */
+	{20, 20}, /* 200 Mhz */
+	{33, 33}, /* 213 Mhz */
+	{46, 46}, /* 266 Mhz */
+	{58, 58}, /* 320 Mhz */
+	{66, 66}, /* 355 Mhz */
+	{78, 78}, /* 400 Mhz */
+	{87, 87}, /* 457 Mhz */
+	{92, 92}  /* 533 Mhz */
 };
 
 /**
