@@ -386,10 +386,10 @@ KBUILD_CFLAGS   := $(ANDROID_TOOLCHAIN_FLAGS) \
 		   -Werror-implicit-function-declaration -Wno-uninitialized \
 		   -Wno-format-security -Wno-array-bounds -Wno-unused-variable -Wno-unused-function \
 		   -Wno-sequence-point \
-		   -Wno-switch -fdiagnostics-color=always \
+		   -Wno-switch \
 		   -Wno-switch-enum \
-		   -Wno-nonnull -fno-openacc \
-		   -Wno-misleading-indentation -mstackrealign \
+		   -Wno-nonnull \
+		   -mstackrealign \
 		   -fno-delete-null-pointer-checks -Wno-maybe-uninitialized \
  		   -std=gnu89 -ffloat-store -O3 -funsafe-math-optimizations \
 		   $(KERNEL_MODS)
@@ -692,6 +692,12 @@ KBUILD_CFLAGS   += $(call cc-option,-fconserve-stack)
 
 # use the deterministic mode of AR if available
 KBUILD_ARFLAGS := $(call ar-option,D)
+
+# Use Following Flags if CC is GCC 6.x.y+ for Compatibilty
+GCCVERSION := $(shell expr `$(CC) -dumpversion | cut -f1 -d.` \>= 6)
+ifeq ($GCCVERSION, 1)
+	KBUILD_CFLAGS	+= -fno-openacc -Wno-misleading-indentation -fdiagnostics-color=always
+endif
 
 # check for 'asm goto'
 ifeq ($(shell $(CONFIG_SHELL) $(srctree)/scripts/gcc-goto.sh $(CC)), y)
