@@ -144,7 +144,7 @@ static void load_timer(struct work_struct *work)
 }
 
 
-static void __cpuinit blu_plug_suspend(struct early_suspend *h)
+static void blu_plug_suspend(struct early_suspend *h)
 {
 	if (!blu_plug_enabled)
 		return;
@@ -154,11 +154,15 @@ static void __cpuinit blu_plug_suspend(struct early_suspend *h)
 
 	cancel_delayed_work_sync(&dyn_work);	
 
-	while (num_online_cpus() > max_cores_screenoff)
-		down_one();
+	while (num_online_cpus() != max_cores_screenoff) {
+		if (num_online_cpus() > max_cores_screenoff)
+			down_one();
+		else if (num_online_cpus() < max_cores_screenoff)
+			up_one();
+	}
 }
 
-static void __cpuinit blu_plug_resume(struct early_suspend *h)
+static void blu_plug_resume(struct early_suspend *h)
 {
 	if (!blu_plug_enabled)
 		return;
@@ -168,6 +172,7 @@ static void __cpuinit blu_plug_resume(struct early_suspend *h)
 
 	while (num_online_cpus() < max_cores)
 		up_one();
+
 	queue_delayed_work_on(0, dyn_workq, &dyn_work, msecs_to_jiffies(delay));
 }
 
@@ -264,11 +269,8 @@ static int set_max_cores_screenoff(const char *val, const struct kernel_param *k
 	if (ret)
 		return -EINVAL;
 
-	if (i < min_online || i > max_online || i > max_cores)
+	if (i < 1 || i > max_cores)
 		return -EINVAL;
-
-	if (i > max_online)
-		i = max_online;
 
 	max_cores_screenoff = i;
 
