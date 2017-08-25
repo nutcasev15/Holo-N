@@ -242,7 +242,7 @@ CONFIG_SHELL := $(shell if [ -x "$$BASH" ]; then echo $$BASH; \
 HOSTCC       = $(CCACHE) gcc
 HOSTCXX      = $(CCACHE) g++
 HOSTCFLAGS   = -Wall -Wmissing-prototypes -Wstrict-prototypes -march=silvermont -mtune=silvermont -msse4.2 -mpopcnt -fomit-frame-pointer -fgcse-las -std=gnu89 -mstackrealign -O3
-HOSTCXXFLAGS = -march=silvermont -mtune=silvermont -msse4.2 -mpopcnt -fgcse-las -mstackrealign -O3
+HOSTCXXFLAGS = -march=silvermont -mtune=silvermont -msse4.2 -mpopcnt -fgcse-las -std=gnu89 -mstackrealign -O3
 
 # Decide whether to build built-in, modular, or both.
 # Normally, just do built-in.
