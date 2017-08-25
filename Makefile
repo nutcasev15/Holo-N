@@ -700,7 +700,8 @@ endif
 
 # Needed to unbreak GCC 7.x and above
 ifeq ($(shell expr `$(CC) -dumpversion | cut -f1 -d.` \>= 7), 1)
-	KBUILD_CFLAGS   += $(call cc-option,-fno-store-merging,)
+	KBUILD_CFLAGS   += $(call cc-option,-fno-store-merging) \
+                       $(call cc-option,-Wno-duplicate-decl-specifier)
 endif
 
 # check for 'asm goto'
