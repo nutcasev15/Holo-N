@@ -55,7 +55,7 @@ static struct delayed_work dyn_work;
 static struct workqueue_struct *dyn_workq;
 
 /* Iterate through possible CPUs and bring online the first offline found */
-static void __ref up_one(void)
+static inline void __ref up_one(void)
 {
 	unsigned int cpu;
 
@@ -79,7 +79,7 @@ out:
 }
 
 /* Iterate through online CPUs and take offline latest core */
-static void __ref down_one(void)
+static inline void __ref down_one(void)
 {
 	unsigned int cpu;
 
@@ -219,7 +219,7 @@ static int set_min_online(const char *val, const struct kernel_param *kp)
 	if (ret)
 		return -EINVAL;
 
-	if (i < 1 || i > max_cores_screenoff)
+	if (i < 1 || i > max_online)
 		return -EINVAL;
 
 	min_online = i;
@@ -244,7 +244,7 @@ static int set_max_online(const char *val, const struct kernel_param *kp)
 	if (ret)
 		return -EINVAL;
 
-	if (i < 1 || i < min_online || i > max_cores)
+	if (i < min_online || i > max_cores)
 		return -EINVAL;
 
 	max_online = i;
@@ -384,7 +384,7 @@ static void dyn_hp_stop(void)
 	destroy_workqueue(dyn_workq);
 
 	/* Wake up all the sibling cores */
-	while (num_online_cpus() != max_cores)
+	while (num_online_cpus() < max_cores)
 		up_one();
 #if DEBUG
 	printk("%s: All CPUs Up\n", __func__);
