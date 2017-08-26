@@ -2558,7 +2558,9 @@ static int smb347_probe(struct i2c_client *client,
 			CHR_info("%s: first status is charging, wake lock\n", __func__);
 			wake_lock(&wakelock_cable);
 		}
-	}
+	} else if (wake_lock_active(&wakelock_cable))
+		wake_unlock(&wakelock_cable);
+
 	not_ready_flag = 0;
 	CHR_info("==== smb347_probe done ====\n");
 	return 0;
