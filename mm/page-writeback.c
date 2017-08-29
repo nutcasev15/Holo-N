@@ -56,7 +56,7 @@
 
 #define RATELIMIT_CALC_SHIFT	10
 
-#define DIRTY_BACKGROUND_RATIO 11
+#define DIRTY_BACKGROUND_RATIO 5
 
 /*
  * After a CPU has dirtied this many pages, balance_dirty_pages_ratelimited
@@ -86,7 +86,7 @@ int vm_highmem_is_dirtyable;
 /*
  * The generator of dirty data starts writeback at this percentage
  */
-int vm_dirty_ratio = 22;
+int vm_dirty_ratio = 10;
 
 /*
  * vm_dirty_bytes starts at 0 (disabled) so that it is a function of
