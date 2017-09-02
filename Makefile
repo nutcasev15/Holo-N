@@ -407,7 +407,7 @@ KBUILD_CFLAGS   := $(ANDROID_TOOLCHAIN_FLAGS) \
 		   -Wno-sequence-point \
 		   -Wno-switch -fdiagnostics-color=always \
 		   -Wno-switch-enum \
-		   -Wno-nonnull \
+		   -Wno-nonnull -Wno-int-in-bool-context \
 		   -mstackrealign \
 		   -fno-delete-null-pointer-checks -Wno-maybe-uninitialized \
  		   -std=gnu89 -ffloat-store \
