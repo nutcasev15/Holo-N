@@ -50,6 +50,7 @@ static unsigned int down_timer_cnt = DEF_DOWN_TIMER_CNT;
 static unsigned int up_timer_cnt = DEF_UP_TIMER_CNT;
 static unsigned int max_cores_screenoff = MAX_CORES_SCREENOFF;
 static unsigned int max_cores;
+static bool in_transit = false;
 
 static struct delayed_work dyn_work;
 static struct workqueue_struct *dyn_workq;
@@ -60,7 +61,7 @@ static inline void __ref up_one(void)
 	unsigned int cpu;
 
 	/* All CPUs are online, return */
-	if (num_online_cpus() >= max_online)
+	if (num_online_cpus() >= max_online && likely(!in_transit))
 		goto out;
 
 	for_each_possible_cpu(cpu) {
@@ -84,7 +85,7 @@ static inline void __ref down_one(void)
 	unsigned int cpu;
 
 	/* Min online CPUs, return */
-	if (num_online_cpus() <= min_online)
+	if (num_online_cpus() <= min_online && likely(!in_transit))
 		goto out;
 
 	for (cpu = max_cores; cpu > 0; cpu--) {
@@ -116,7 +117,12 @@ static void load_timer(struct work_struct *work)
 {
 	unsigned int cpu;
 	unsigned int avg_load = 0;
-	unsigned int online_cpus = num_online_cpus();
+	unsigned int online_cpus;
+
+	if (unlikely(in_transit))
+		return;
+
+	online_cpus = num_online_cpus();
 
 	if (down_timer < down_timer_cnt)
 		down_timer++;
@@ -148,6 +154,9 @@ static void blu_plug_suspend(struct early_suspend *h)
 {
 	if (!blu_plug_enabled)
 		return;
+
+	in_transit = true;
+
 #if DEBUG
 	printk("%s: Suspending Operations", __func__);
 #endif
@@ -155,17 +164,22 @@ static void blu_plug_suspend(struct early_suspend *h)
 	cancel_delayed_work_sync(&dyn_work);	
 
 	while (num_online_cpus() != max_cores_screenoff) {
-		if (num_online_cpus() > max_cores_screenoff)
-			down_one();
-		else if (num_online_cpus() < max_cores_screenoff)
+		if (num_online_cpus() < max_cores_screenoff)
 			up_one();
+		else
+			down_one();
 	}
+
+	in_transit = false;
 }
 
 static void blu_plug_resume(struct early_suspend *h)
 {
 	if (!blu_plug_enabled)
 		return;
+
+	in_transit = true;
+
 #if DEBUG
 	printk("%s: Starting Operations", __func__);
 #endif
@@ -173,6 +187,7 @@ static void blu_plug_resume(struct early_suspend *h)
 	while (num_online_cpus() < max_cores)
 		up_one();
 
+	in_transit = false;
 	queue_delayed_work_on(0, dyn_workq, &dyn_work, msecs_to_jiffies(delay));
 }
 
