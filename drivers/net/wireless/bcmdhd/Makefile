@@ -26,6 +26,7 @@ DHDCFLAGS = -Wall -Wstrict-prototypes -Dlinux -DBCMDRIVER               \
 	-DESCAN_RESULT_PATCH -DSUPPORT_PM2_ONLY -DWLTDLS                      \
 	-DDHD_DONOT_FORWARD_BCMEVENT_AS_NETWORK_PKT -DRXFRAME_THREAD       \
 	-DMIRACAST_AMPDU_SIZE=8	-DROAM_ENABLE	-DWL_IFACE_COMB_NUM_CHANNELS	\
+	-DDHD_USE_EARLYSUSPEND \
 	-Idrivers/net/wireless/bcmdhd   \
 	-Idrivers/net/wireless/bcmdhd/common/include \
 	-Idrivers/net/wireless/bcmdhd/include
