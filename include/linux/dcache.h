@@ -118,16 +118,17 @@ struct dentry {
 	struct super_block *d_sb;	/* The root of the dentry tree */
 	unsigned long d_time;		/* used by d_revalidate */
 	void *d_fsdata;			/* fs-specific data */
-
+	
 	struct list_head d_lru;		/* LRU list */
-	struct list_head d_child;	/* child of parent list */
 	struct list_head d_subdirs;	/* our children */
+	struct list_head d_child;	/* child of parent list */
 	/*
-	 * d_alias and d_rcu can share memory
+	 * d_child, d_alias and d_rcu can share memory
 	 */
 	union {
-		struct hlist_node d_alias;	/* inode alias list */
+		struct list_head d_child;	/* child of parent list */
 	 	struct rcu_head d_rcu;
+		struct hlist_node d_alias;	/* inode alias list */
 	} d_u;
 };
 
