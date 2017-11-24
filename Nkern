@@ -19,9 +19,9 @@ else
 fi
 sleep $SLEEP
 echo "Setting Extra Version"
-export EV=EXTRAVERSION=_Hololite_v$v
+export EV=EXTRAVERSION=_Holo_N_v$v
 echo "Setting Defconfig"
-export DEFCONFIG=zenfone2_defconfig
+export DEFCONFIG=holo_defconfig
 echo "Setting bzImage Location"
 export BZIMAGE=arch/x86/boot/bzImage
 echo "To Enable Logging Support Export logs=1 or 101"
@@ -91,8 +91,8 @@ then
 	sleep $SLEEP
 	echo "Copying bzImage"
 	cp ../arch/x86/boot/bzImage bzImage
-	echo "Compiling Hololite_v"$v".zip"
-	find . -type f -exec zip Hololite_v"$v".zip {} +
+	echo "Compiling HoloN_v"$v".zip"
+	find . -type f -exec zip HoloN_v"$v".zip {} +
 	cd ..
 	rm out/bzImage
 	printf "Zip Created & Shipped\n"
