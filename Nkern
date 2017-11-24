@@ -5,8 +5,9 @@ echo "Current Date : $NOW"
 echo "Applying Build Settings"
 
 export ARCH=x86_64
+export CROSS_COMPILE=x86_64-linux-android-
 export CCOMPILE=$CROSS_COMPILE
-export CROSS_COMPILE=x86_64-linux-
+
 
 #CONFIGS
 export SLEEP=1
@@ -18,10 +19,8 @@ else
 	export v="$1"
 fi
 sleep $SLEEP
-echo "Setting Extra Version"
-export EV=EXTRAVERSION=_Holo_N_v$v
 echo "Setting Defconfig"
-export DEFCONFIG=holo_defconfig
+export DEFCONFIG=zenfone_defconfig
 echo "Setting bzImage Location"
 export BZIMAGE=arch/x86/boot/bzImage
 echo "Enabling Graphite Optimizations"
@@ -99,12 +98,12 @@ then
 	sleep $SLEEP
 	echo "Copying bzImage"
 	cp ../arch/x86/boot/bzImage bzImage
-	echo "Compiling HoloN_v"$v".zip"
-	find . -type f -exec zip HoloN_v"$v".zip {} +
+	echo "Compiling Test_v"$v".zip"
+	find . -type f -exec zip Test_v"$v".zip {} +
 	cd ..
 	rm out/bzImage
 	printf "Zip Created & Shipped\n"
-	mv out/HoloN_v"$v".zip ../../
+	mv out/Test_v"$v".zip ../../
 	sleep 2
 	clear
 	echo "Completion Time :"
