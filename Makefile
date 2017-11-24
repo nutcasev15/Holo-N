@@ -239,6 +239,7 @@ CONFIG_SHELL := $(shell if [ -x "$$BASH" ]; then echo $$BASH; \
 	  else if [ -x /bin/bash ]; then echo /bin/bash; \
 	  else echo sh; fi ; fi)
 
+CCACHE := $(shell bash -c 'command -v ccache')
 HOSTCC       = $(CCACHE) gcc
 HOSTCXX      = $(CCACHE) g++
 HOSTCFLAGS   = -Wall -Wmissing-prototypes -Wstrict-prototypes -march=silvermont -mtune=silvermont -msse4.2 -mpopcnt -fomit-frame-pointer -fgcse-las -std=gnu89 -mstackrealign -O3
@@ -324,25 +325,25 @@ include $(srctree)/scripts/Kbuild.include
 
 # Make variables (CC, etc...) + Hax for Rom Inline Compile
 ifneq ($(CROSS_COMPILE_I),)
-AS		= x86_64-linux-as
-LD		= x86_64-linux-ld
-CC		= x86_64-linux-gcc
-CPP		= $(CC) -E
-AR		= x86_64-linux-ar
-NM		= x86_64-linux-nm
-STRIP		= x86_64-linux-strip
-OBJCOPY		= x86_64-linux-objcopy
-OBJDUMP		= x86_64-linux-objdump
+	AS		= x86_64-linux-as
+	LD		= x86_64-linux-ld
+	CC		= $(CCACHE) x86_64-linux-gcc
+	CPP		= $(CC) -E
+	AR		= x86_64-linux-ar
+	NM		= x86_64-linux-nm
+	STRIP		= x86_64-linux-strip
+	OBJCOPY		= x86_64-linux-objcopy
+	OBJDUMP		= x86_64-linux-objdump
 else
-AS		= $(CROSS_COMPILE)as
-LD		= $(CROSS_COMPILE)ld
-CC		= $(CROSS_COMPILE)gcc
-CPP		= $(CC) -E
-AR		= $(CROSS_COMPILE)ar
-NM		= $(CROSS_COMPILE)nm
-STRIP		= $(CROSS_COMPILE)strip
-OBJCOPY		= $(CROSS_COMPILE)objcopy
-OBJDUMP		= $(CROSS_COMPILE)objdump
+	AS		= $(CROSS_COMPILE)as
+	LD		= $(CROSS_COMPILE)ld
+	CC		= $(CCACHE) $(CROSS_COMPILE)gcc
+	CPP		= $(CC) -E
+	AR		= $(CROSS_COMPILE)ar
+	NM		= $(CROSS_COMPILE)nm
+	STRIP		= $(CROSS_COMPILE)strip
+	OBJCOPY		= $(CROSS_COMPILE)objcopy
+	OBJDUMP		= $(CROSS_COMPILE)objdump
 endif
 AWK		= awk
 GENKSYMS	= scripts/genksyms/genksyms
