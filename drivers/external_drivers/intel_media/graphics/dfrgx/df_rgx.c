@@ -511,14 +511,16 @@ static int tcd_set_cur_state(struct thermal_cooling_device *tcd,
 }
 
 
-unsigned long voltage_gfx = 0.95;
+unsigned long voltage_gfx = 0.65;
 void df_rgx_init_available_freq_table(struct device *dev)
 {
 	int i = 0;
 	int n_states = sku_levels();
 
-	for (i = 0; i < n_states; i++)
+	for (i = 0; i < n_states; i++) {
+		voltage_gfx -= (0.05*i);
 		opp_add(dev, a_available_state_freq[i].freq, voltage_gfx);
+	}
 }
 /**
  * tcd_get_available_states() - thermal cooling device
