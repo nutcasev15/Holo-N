@@ -97,7 +97,7 @@
 /* DF_RGX_POLLING_INTERVAL_MS - Polling interval in milliseconds.
  * FIXME - Need to have this be 5 ms, but have to workaround HZ tick usage.
  */
-#define DF_RGX_POLLING_INTERVAL_MS 50
+#define DF_RGX_POLLING_INTERVAL_MS 40
 
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 10, 0))
 /**

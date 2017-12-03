@@ -38,7 +38,7 @@
 #include "dfrgx_interface.h"
 #include "dev_freq_attrib.h"
 
-#define MAX_NUM_SAMPLES		10
+#define MAX_NUM_SAMPLES		5
 
 /*Profiling Information - */
 struct gpu_profiling_record a_profiling_info[NUMBER_OF_LEVELS_MAX_FUSE];
@@ -290,7 +290,7 @@ static void dfrgx_add_sample_data(struct df_rgx_data_s *g_dfrgx,
 	/* When we collect MAX_NUM_SAMPLES samples we need to decide
 	* bursting or unbursting
 	*/
-	if (num_samples == MAX_NUM_SAMPLES) {
+	if (unlikely(num_samples == MAX_NUM_SAMPLES)) {
 		int average_active_util = sum_samples_active / MAX_NUM_SAMPLES;
 		unsigned int burst = DFRGX_NO_BURST_REQ;
 
