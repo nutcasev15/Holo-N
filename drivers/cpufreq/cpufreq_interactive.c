@@ -1593,7 +1593,9 @@ static int cpufreq_governor_interactive(struct cpufreq_policy *policy,
 			del_timer_sync(&pcpu->cpu_slack_timer);
 			cpufreq_interactive_timer_start(tunables, j);
 			pcpu->governor_enabled = 1;
+#ifdef CONFIG_IRQ_TIME_ACCOUNTING
 			pcpu->io_busy = 0;
+#endif /* CONFIG_IRQ_TIME_ACCOUNTING */
 			up_write(&pcpu->enable_sem);
 		}
 
