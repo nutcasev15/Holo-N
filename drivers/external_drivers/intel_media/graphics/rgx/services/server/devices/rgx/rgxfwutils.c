@@ -1575,7 +1575,8 @@ PVRSRV_ERROR RGXSetupFirmware(PVRSRV_DEVICE_NODE	*psDeviceNode,
 			psRGXFWInit->ui32InitialCoreClockSpeed = psRGXData->psRGXTimingInfo->ui32CoreClockSpeed;
 
 		/* if user defined latency */
-		if (psRGXData->psRGXTimingInfo->ui32ActivePMLatencyms != ui32APMLatency)
+		/* Don't Override if Lower than Kernel Defined Latency */
+		if (ui32APMLatency > psRGXData->psRGXTimingInfo->ui32ActivePMLatencyms)
 			psRGXFWInit->ui32ActivePMLatencyms = ui32APMLatency;
 		else
 			psRGXFWInit->ui32ActivePMLatencyms = psRGXData->psRGXTimingInfo->ui32ActivePMLatencyms;
