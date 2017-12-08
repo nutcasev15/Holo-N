@@ -38,6 +38,7 @@ x509.genkey
 #
 !.gitignore
 !.mailmap
+!*.rc
 
 #
 # Generated include files
