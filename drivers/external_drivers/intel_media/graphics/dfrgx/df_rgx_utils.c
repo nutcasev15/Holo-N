@@ -26,10 +26,13 @@
  */
 #include "df_rgx_defs.h"
 #include "dev_freq_debug.h"
+#include "dev_freq_graphics_pm.h"
+#include "df_rgx_loads.h"
 
 extern int is_tng_a0;
 extern int gpu_freq_get_max_fuse_setting(void);
 
+/* Not Used Anymore. Only Here to Keep SysFS from Dying */
 struct gpu_freq_thresholds a_governor_profile[] = {
 			/* low, high thresholds for Performance profile */
 			{67, 85},
@@ -94,7 +97,7 @@ int df_rgx_get_util_record_index_by_freq(unsigned long freq)
 
 /**
  * df_rgx_request_burst() - Decides if dfrgx needs to BURST, UNBURST
- * or keep the current frequency level.
+ * or keep the current frequency level with selected gov.
  * @pdfrgx_data: Dynamic turbo information
  * @util_percentage: percentage of utilization in active state.
  * Function return value: DFRGX_NO_BURST_REQ, DFRGX_BURST_REQ,
@@ -103,32 +106,60 @@ int df_rgx_get_util_record_index_by_freq(unsigned long freq)
 unsigned int df_rgx_request_burst(struct df_rgx_data_s *pdfrgx_data,
 			int util_percentage)
 {
-	int current_index = pdfrgx_data->gpu_utilization_record_index;
-	unsigned long freq = a_available_state_freq[current_index].freq;
-	int new_index;
 	unsigned int burst = DFRGX_NO_BURST_REQ;
+	int i;
+	int target_index = -1; /* Check For Modification (Impossible Value) */
+	int current_index;
+	int table_offset;
 
-	new_index = df_rgx_get_util_record_index_by_freq(freq);
+	/* Check If Current Freq Is Valid */
+	current_index =
+	df_rgx_get_util_record_index_by_freq(a_available_state_freq[pdfrgx_data->gpu_utilization_record_index].freq);
 
-	if (new_index < 0)
+	/* Get Target Loads Table Offset for Selected Gov */
+	table_offset = get_gpu_target_table_offset(pdfrgx_data);
+
+	if (unlikely(current_index < 0))
 		goto out;
 
-	/* Decide unburst/burst based on utilization*/
-	if (util_percentage > a_governor_profile[pdfrgx_data->g_profile_index].util_th_high
-		&& new_index < pdfrgx_data->g_max_freq_index) {
-		/* Provide recommended burst*/
-		pdfrgx_data->gpu_utilization_record_index = pdfrgx_data->g_max_freq_index;
-		burst = DFRGX_BURST_REQ;
-	} else if (util_percentage < a_governor_profile[pdfrgx_data->g_profile_index].util_th_low
-		&& new_index > pdfrgx_data->g_min_freq_index) {
-		/* Provide recommended unburst*/
+	/* Check For Change Requirement */
+
+	/* Check if Load is Still Above the Threshold for the Current Freq but Below the Next Threshold */
+	if (unlikely(util_percentage >= target_loads[(table_offset + current_index)]
+	&& (current_index - 1) >= pdfrgx_data->g_max_freq_index
+	&& util_percentage < target_loads[(table_offset + (current_index - 1))]))
+		goto out;
+
+	/* Check If Load is Above Threshold at Max Freq */
+	if (unlikely(current_index == pdfrgx_data->g_max_freq_index
+	&& util_percentage >= target_loads[(table_offset + current_index)]))
+		goto out;
+
+	/* Check If Load is Below Threshold at Min Freq */
+	if (unlikely(current_index == pdfrgx_data->g_min_freq_index
+	&& util_percentage <= target_loads[(table_offset + current_index)]))
+		goto out;
+
+	/* Throttling Code */
+	if (current_index > pdfrgx_data->g_min_freq_index
+	|| !df_rgx_is_active()) {
 		pdfrgx_data->gpu_utilization_record_index = pdfrgx_data->g_min_freq_index;
 		burst = DFRGX_UNBURST_REQ;
-	} else if (new_index < pdfrgx_data->g_min_freq_index) {
-		/* If frequency is throttled, request return to min */
-		pdfrgx_data->gpu_utilization_record_index = pdfrgx_data->g_min_freq_index;
-		burst = DFRGX_UNBURST_REQ;
+		goto out;
 	}
+
+	for (i = pdfrgx_data->g_max_freq_index; i <= pdfrgx_data->g_min_freq_index; i++) {
+		if (unlikely(util_percentage >= target_loads[(table_offset + i)])) {
+			target_index = i;
+			burst = DFRGX_BURST_REQ;
+			break;
+		}
+	}
+
+	if (unlikely(target_index == -1))
+		goto out;
+
+	pdfrgx_data->gpu_utilization_record_index = target_index;
 
 out:
 	return burst;
