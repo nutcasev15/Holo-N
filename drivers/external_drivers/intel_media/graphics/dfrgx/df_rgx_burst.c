@@ -379,25 +379,7 @@ static int df_rgx_action(struct df_rgx_data_s *g_dfrgx)
 			DFRGX_DPF(DFRGX_DEBUG_LOW, "%s: Failed to set at : %lu !\n",
 			__func__,g_dfrgx->bus_freq_data->bf_desired_freq);
 		}
-		/*freq was changed and We don't need this thread working for now, so let it be disabled*/
-		else if (dfrgx_burst_is_enabled(g_dfrgx)
-				&& g_dfrgx->g_profile_index != DFRGX_TURBO_PROFILE_SIMPLE_ON_DEMAND
-				&& g_dfrgx->g_profile_index != DFRGX_TURBO_PROFILE_CUSTOM) {
-			/*freq was changed and We don't need this thread
-			* working for now, so let it be disabled
-			*/
-
-			dfrgx_burst_set_enable(g_dfrgx, 0);
-			return 1;
-		}
 	}
-
-	/*So don't need to do any utilization polling when
-	* simple_on_demand is not the current governor
-	*/
-	if (g_dfrgx->g_profile_index != DFRGX_TURBO_PROFILE_SIMPLE_ON_DEMAND
-		&& g_dfrgx->g_profile_index != DFRGX_TURBO_PROFILE_CUSTOM)
-		return 1;
 
 	if (gpu_rgx_get_util_stats(&util_stats)) {
 		DFRGX_DPF(DFRGX_DEBUG_LOW, "%s: Active: %d, "

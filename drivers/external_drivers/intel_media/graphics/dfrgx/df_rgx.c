@@ -286,8 +286,7 @@ static int df_rgx_bus_target(struct device *dev, unsigned long *p_freq,
 				desired_freq = df->max_freq;
 				adjust_curfreq  = 1;
 			}
-		} else if (!strncmp(df->governor->name,
-				"simple_ondemand", DEVFREQ_NAME_LEN)) {
+		} else {
 			*p_freq = df->previous_freq;
 			goto out;
 		}
@@ -332,10 +331,7 @@ static int df_rgx_bus_target(struct device *dev, unsigned long *p_freq,
 			*p_freq = df->previous_freq;
 		}
 
-		if ((!strncmp(df->governor->name,
-				"simple_ondemand", DEVFREQ_NAME_LEN)
-			&& !dfrgx_burst_is_enabled(&bfdata->g_dfrgx_data))
-			|| gpu_defer_req)
+		if (!dfrgx_burst_is_enabled(&bfdata->g_dfrgx_data) || gpu_defer_req)
 			dfrgx_burst_set_enable(&bfdata->g_dfrgx_data, 1);
 	}
 
