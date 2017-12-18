@@ -33,33 +33,33 @@
 
 int target_loads[] = {
 /* Simple_Ondemand Configuration */
-	92, /* 533 Mhz */
-	87, /* 457 Mhz */
-	78, /* 400 Mhz */
-	66, /* 355 Mhz */
-	58, /* 320 Mhz */
-	46, /* 266 Mhz */
-	33, /* 213 Mhz */
-	0,  /* 200 Mhz, Needs to be 0 */
-
-/* Performance Configuration */
-	50, /* 533 Mhz */
-	40, /* 457 Mhz */
-	35, /* 400 Mhz */
-	25, /* 355 Mhz */
-	20, /* 320 Mhz */
-	15, /* 266 Mhz */
+	95, /* 533 Mhz */
+	85, /* 457 Mhz */
+	80, /* 400 Mhz */
+	65, /* 355 Mhz */
+	55, /* 320 Mhz */
+	25, /* 266 Mhz */
 	10, /* 213 Mhz */
 	0,  /* 200 Mhz, Needs to be 0 */
 
+/* Performance Configuration */
+	55, /* 533 Mhz */
+	40, /* 457 Mhz */
+	30, /* 400 Mhz */
+	5, /* 355 Mhz */
+	5, /* 320 Mhz SKIP */
+	5, /* 266 Mhz SKIP */
+	5, /* 213 Mhz SKIP */
+	0,  /* 200 Mhz, Needs to be 0 */
+
 /* Powersave Configuration */
-	99, /* 533 Mhz */
-	92, /* 457 Mhz */
-	86, /* 400 Mhz */
-	75, /* 355 Mhz */
-	60, /* 320 Mhz */
-	50, /* 266 Mhz */
-	40, /* 213 Mhz */
+	100, /* 533 Mhz */
+	100, /* 457 Mhz SKIP */
+	100, /* 400 Mhz SKIP */
+	90, /* 355 Mhz */
+	65, /* 320 Mhz */
+	25, /* 266 Mhz */
+	15, /* 213 Mhz */
 	0  /* 200 Mhz, Needs to be 0 */
 
 };
