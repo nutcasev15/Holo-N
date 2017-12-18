@@ -36,6 +36,72 @@
 #define CREATE_TRACE_POINTS
 #include <trace/events/cpufreq_interactive.h>
 
+#ifdef CONFIG_ADVANCED_INTERACTIVE
+#include <linux/earlysuspend.h>
+#ifdef CONFIG_CPU_FREQ_GOV_INTERACTIVE_HOTPLUG
+static int nr_cpus_sleep_ext;
+#endif /* CONFIG_CPU_FREQ_GOV_INTERACTIVE_HOTPLUG */
+static bool screen_online = true;
+
+#ifdef CONFIG_CPU_FREQ_GOV_INTERACTIVE_HOTPLUG
+/* Iterate through possible CPUs and bring online the first offline found */
+static inline void __ref up_one(void)
+{
+	unsigned int cpu;
+
+	for_each_possible_cpu(cpu) {
+		if (cpu_is_offline(cpu)) {
+			cpu_up(cpu);
+			break;
+		}
+	}
+}
+
+/* Iterate through online CPUs and take offline latest core */
+static inline void __ref down_one(void)
+{
+	unsigned int cpu;
+
+	for (cpu = num_possible_cpus(); cpu > 0; cpu--) {
+		if (cpu_online(cpu)) {
+			cpu_down(cpu);
+			break;
+		}
+	}
+}
+#endif /* CONFIG_CPU_FREQ_GOV_INTERACTIVE_HOTPLUG */
+
+static void interactive_suspend(struct early_suspend *h)
+{
+	screen_online = false;
+
+#ifdef CONFIG_CPU_FREQ_GOV_INTERACTIVE_HOTPLUG
+	while (num_online_cpus() != nr_cpus_sleep_ext) {
+		if (num_online_cpus() < nr_cpus_sleep_ext)
+			up_one();
+		else
+			down_one();
+	}
+#endif /* CONFIG_CPU_FREQ_GOV_INTERACTIVE_HOTPLUG */
+}
+
+static void interactive_resume(struct early_suspend *h)
+{
+	screen_online = true;
+
+#ifdef CONFIG_CPU_FREQ_GOV_INTERACTIVE_HOTPLUG
+	while (num_online_cpus() < num_possible_cpus())
+		up_one();
+#endif /* CONFIG_CPU_FREQ_GOV_INTERACTIVE_HOTPLUG */
+}
+
+static struct early_suspend screen_state __refdata = {
+	.level = EARLY_SUSPEND_LEVEL_STOP_DRAWING + 1,
+	.suspend = interactive_suspend,
+	.resume = interactive_resume,
+};
+#endif /* CONFIG_ADVANCED_INTERACTIVE */
+
 struct cpufreq_interactive_cpuinfo {
 	struct timer_list cpu_timer;
 	struct timer_list cpu_slack_timer;
@@ -136,6 +202,12 @@ struct cpufreq_interactive_tunables {
 	unsigned int irq_load_threshold_val;
 	unsigned int iowait_load_threshold_val;
 #endif /* CONFIG_IRQ_TIME_ACCOUNTING */
+#ifdef CONFIG_ADVANCED_INTERACTIVE
+#ifdef CONFIG_CPU_FREQ_GOV_INTERACTIVE_HOTPLUG
+	int nr_cpus_sleep;
+#endif /* CONFIG_CPU_FREQ_GOV_INTERACTIVE_HOTPLUG */
+	unsigned long sleep_max_freq;
+#endif /* CONFIG_ADVANCED_INTERACTIVE */
 };
 
 /* For cases where we have single governor instance for system */
@@ -535,6 +607,11 @@ static void cpufreq_interactive_timer(unsigned long data)
 			new_freq = tunables->hispeed_freq;
 	}
 
+#ifdef CONFIG_ADVANCED_INTERACTIVE
+	if (!screen_online && new_freq > tunables->sleep_max_freq)
+		new_freq = (unsigned int)tunables->sleep_max_freq;
+#endif /* CONFIG_ADVANCED_INTERACTIVE */
+
 	if (pcpu->target_freq >= tunables->hispeed_freq &&
 	    new_freq > pcpu->target_freq &&
 	    now - pcpu->hispeed_validate_time <
@@ -556,6 +633,11 @@ static void cpufreq_interactive_timer(unsigned long data)
 	}
 
 	new_freq = pcpu->freq_table[index].frequency;
+
+#ifdef CONFIG_ADVANCED_INTERACTIVE
+	if (!screen_online && new_freq > tunables->sleep_max_freq)
+		new_freq = (unsigned int)tunables->sleep_max_freq;
+#endif /* CONFIG_ADVANCED_INTERACTIVE */
 
 	/*
 	 * Do not scale below floor_freq unless we have been at or above the
@@ -1293,6 +1375,54 @@ static ssize_t store_iowait_load_threshold(struct cpufreq_interactive_tunables *
 }
 #endif /* CONFIG_IRQ_TIME_ACCOUNTING */
 
+#ifdef CONFIG_ADVANCED_INTERACTIVE
+#ifdef CONFIG_CPU_FREQ_GOV_INTERACTIVE_HOTPLUG
+static ssize_t show_nr_cpus_sleep(struct cpufreq_interactive_tunables
+		*tunables, char *buf)
+{
+	return sprintf(buf, "%d\n", tunables->nr_cpus_sleep);
+}
+
+static ssize_t store_nr_cpus_sleep(struct cpufreq_interactive_tunables
+		*tunables, const char *buf, size_t count)
+{
+	int ret;
+	int val;
+
+	ret = strict_strtoul(buf, 0, &val);
+	if (ret < 0)
+		return ret;
+
+	if (val < 1 && val > num_possible_cpus())
+		return -EINVAL;
+
+	tunables->nr_cpus_sleep = val;
+	nr_cpus_sleep_ext = val;
+	return count;
+}
+#endif /* CONFIG_CPU_FREQ_GOV_INTERACTIVE_HOTPLUG */
+
+static ssize_t show_sleep_max_freq(struct cpufreq_interactive_tunables
+		*tunables, char *buf)
+{
+	return sprintf(buf, "%lu\n", tunables->sleep_max_freq);
+}
+
+static ssize_t store_sleep_max_freq(struct cpufreq_interactive_tunables
+		*tunables, const char *buf, size_t count)
+{
+	int ret;
+	unsigned long val;
+
+	ret = strict_strtoul(buf, 0, &val);
+	if (ret < 0)
+		return ret;
+
+	tunables->sleep_max_freq = val;
+	return count;
+}
+#endif /* CONFIG_ADVANCED_INTERACTIVE */
+
 /*
  * Create show/store routines
  * - sys: One governor instance for complete SYSTEM
@@ -1347,6 +1477,12 @@ show_store_gov_pol_sys(io_is_busy);
 show_store_gov_pol_sys(irq_load_threshold);
 show_store_gov_pol_sys(iowait_load_threshold);
 #endif /* CONFIG_IRQ_TIME_ACCOUNTING */
+#ifdef CONFIG_ADVANCED_INTERACTIVE
+#ifdef CONFIG_CPU_FREQ_GOV_INTERACTIVE_HOTPLUG
+show_store_gov_pol_sys(nr_cpus_sleep);
+#endif /* CONFIG_CPU_FREQ_GOV_INTERACTIVE_HOTPLUG */
+show_store_gov_pol_sys(sleep_max_freq);
+#endif /* CONFIG_ADVANCED_INTERACTIVE */
 
 #define gov_sys_attr_rw(_name)						\
 static struct global_attr _name##_gov_sys =				\
@@ -1376,6 +1512,12 @@ gov_sys_pol_attr_rw(io_is_busy);
 gov_sys_pol_attr_rw(irq_load_threshold);
 gov_sys_pol_attr_rw(iowait_load_threshold);
 #endif /* CONFIG_IRQ_TIME_ACCOUNTING */
+#ifdef CONFIG_ADVANCED_INTERACTIVE
+#ifdef CONFIG_CPU_FREQ_GOV_INTERACTIVE_HOTPLUG
+gov_sys_pol_attr_rw(nr_cpus_sleep);
+#endif /* CONFIG_CPU_FREQ_GOV_INTERACTIVE_HOTPLUG */
+gov_sys_pol_attr_rw(sleep_max_freq);
+#endif /* CONFIG_ADVANCED_INTERACTIVE */
 
 static struct global_attr boostpulse_gov_sys =
 	__ATTR(boostpulse, 0200, NULL, store_boostpulse_gov_sys);
@@ -1409,6 +1551,12 @@ static struct attribute *interactive_attributes_gov_sys[] = {
 	&irq_load_threshold_gov_sys.attr,
 	&iowait_load_threshold_gov_sys.attr,
 #endif /* CONFIG_IRQ_TIME_ACCOUNTING */
+#ifdef CONFIG_ADVANCED_INTERACTIVE
+#ifdef CONFIG_CPU_FREQ_GOV_INTERACTIVE_HOTPLUG
+	&nr_cpus_sleep_gov_sys.attr,
+#endif /* CONFIG_CPU_FREQ_GOV_INTERACTIVE_HOTPLUG */
+	&sleep_max_freq_gov_sys.attr,
+#endif /* CONFIG_ADVANCED_INTERACTIVE */
 	NULL,
 };
 
@@ -1437,6 +1585,12 @@ static struct attribute *interactive_attributes_gov_pol[] = {
 	&irq_load_threshold_gov_pol.attr,
 	&iowait_load_threshold_gov_pol.attr,
 #endif /* CONFIG_IRQ_TIME_ACCOUNTING */
+#ifdef CONFIG_ADVANCED_INTERACTIVE
+#ifdef CONFIG_CPU_FREQ_GOV_INTERACTIVE_HOTPLUG
+	&nr_cpus_sleep_gov_pol.attr,
+#endif /* CONFIG_CPU_FREQ_GOV_INTERACTIVE_HOTPLUG */
+	&sleep_max_freq_gov_pol.attr,
+#endif /* CONFIG_ADVANCED_INTERACTIVE */
 	NULL,
 };
 
@@ -1525,6 +1679,13 @@ static int cpufreq_governor_interactive(struct cpufreq_policy *policy,
 		tunables->irq_load_threshold_val = DEFAULT_IRQ_LOAD_THRESHOLD;
 		tunables->iowait_load_threshold_val = DEFAULT_IOWAIT_LOAD_THRESHOLD;
 #endif /* CONFIG_IRQ_TIME_ACCOUNTING */
+#ifdef CONFIG_ADVANCED_INTERACTIVE
+#ifdef CONFIG_CPU_FREQ_GOV_INTERACTIVE_HOTPLUG
+		tunables->nr_cpus_sleep = num_possible_cpus();
+		nr_cpus_sleep_ext = tunables->nr_cpus_sleep;
+#endif /* CONFIG_CPU_FREQ_GOV_INTERACTIVE_HOTPLUG */
+		tunables->sleep_max_freq = policy->max;
+#endif /* CONFIG_ADVANCED_INTERACTIVE */
 
 		spin_lock_init(&tunables->target_loads_lock);
 		spin_lock_init(&tunables->above_hispeed_delay_lock);
@@ -1547,6 +1708,9 @@ static int cpufreq_governor_interactive(struct cpufreq_policy *policy,
 			idle_notifier_register(&cpufreq_interactive_idle_nb);
 			cpufreq_register_notifier(&cpufreq_notifier_block,
 					CPUFREQ_TRANSITION_NOTIFIER);
+#ifdef CONFIG_ADVANCED_INTERACTIVE
+			register_early_suspend(&screen_state);
+#endif /* CONFIG_ADVANCED_INTERACTIVE */
 		}
 
 		break;
@@ -1557,6 +1721,9 @@ static int cpufreq_governor_interactive(struct cpufreq_policy *policy,
 				cpufreq_unregister_notifier(&cpufreq_notifier_block,
 						CPUFREQ_TRANSITION_NOTIFIER);
 				idle_notifier_unregister(&cpufreq_interactive_idle_nb);
+#ifdef CONFIG_ADVANCED_INTERACTIVE
+				unregister_early_suspend(&screen_state);
+#endif /* CONFIG_ADVANCED_INTERACTIVE */
 			}
 
 			sysfs_remove_group(get_governor_parent_kobj(policy),

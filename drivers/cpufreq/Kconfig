@@ -196,6 +196,15 @@ config CPU_FREQ_GOV_INTERACTIVE
 
 	  If in doubt, say N.
 
+
+config ADVANCED_INTERACTIVE
+	depends on CPU_FREQ_GOV_INTERACTIVE && HAS_EARLYSUSPEND
+	tristate "Advanced Tunables for Interactive Gov"
+
+config CPU_FREQ_GOV_INTERACTIVE_HOTPLUG
+	depends on ADVANCED_INTERACTIVE
+	tristate "Hotplug Support for Interactive Gov When Screen is Off"
+
 config CPU_FREQ_GOV_CONSERVATIVE
 	tristate "'conservative' cpufreq governor"
 	depends on CPU_FREQ
