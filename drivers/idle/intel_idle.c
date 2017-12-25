@@ -501,27 +501,31 @@ static struct cpuidle_state moorfld_cstates[CPUIDLE_STATE_MAX] = {
 		.exit_latency = 1,
 		.target_residency = 4,
 		.enter = &intel_idle },
+	{ /* MWAIT C4 */
+		.name = "C4-ATM",
+		.desc = "MWAIT 0x30",
+		.flags = MWAIT2flg(0x30) | CPUIDLE_FLAG_TIME_VALID | CPUIDLE_FLAG_TLB_FLUSHED,
+		.exit_latency = 90,
+		.target_residency = 400,
+		.enter = &intel_idle },
 	{ /* MWAIT C6 */
 		.name = "C6-ATM",
 		.desc = "MWAIT 0x52",
-		.flags = MWAIT2flg(0x52) | CPUIDLE_FLAG_TIME_VALID
-					 | CPUIDLE_FLAG_TLB_FLUSHED,
+		.flags = MWAIT2flg(0x52) | CPUIDLE_FLAG_TIME_VALID | CPUIDLE_FLAG_TLB_FLUSHED,
 		.exit_latency = 140,
 		.target_residency = 560,
 		.enter = &intel_idle },
 	{ /* MWAIT C7-S0i1 */
 		.name = "S0i1-ATM",
 		.desc = "MWAIT 0x60",
-		.flags = MWAIT2flg(0x60) | CPUIDLE_FLAG_TIME_VALID
-					 | CPUIDLE_FLAG_TLB_FLUSHED,
+		.flags = MWAIT2flg(0x60) | CPUIDLE_FLAG_TIME_VALID | CPUIDLE_FLAG_TLB_FLUSHED,
 		.exit_latency = 1200,
 		.target_residency = 4000,
 		.enter = &intel_idle },
 	{ /* MWAIT C9-S0i3 */
 		.name = "S0i3-ATM",
 		.desc = "MWAIT 0x64",
-		.flags = MWAIT2flg(0x64) | CPUIDLE_FLAG_TIME_VALID
-					 | CPUIDLE_FLAG_TLB_FLUSHED,
+		.flags = MWAIT2flg(0x64) | CPUIDLE_FLAG_TIME_VALID | CPUIDLE_FLAG_TLB_FLUSHED,
 		.exit_latency = 10000,
 		.target_residency = 20000,
 		.enter = &intel_idle },
