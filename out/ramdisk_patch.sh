@@ -97,6 +97,7 @@ replace_file() {
 run_ramdisk_mods() {
 # Remove Files
   rm -f /tmp/anykernel/ramdisk/unpack/init.power.mofd_v1.rc;
+  rm -f /tmp/anykernel/ramdisk/unpack/modified_version;
 # Copy Modified Files
   cp -prf /tmp/anykernel/ramdisk/mods/. /tmp/anykernel/ramdisk/unpack/;
 # Perform Other Modifications
@@ -106,7 +107,7 @@ run_ramdisk_mods() {
   remove_line /tmp/anykernel/ramdisk/unpack/init.common.rc "write /proc/sys/net/core/wmem_max 1048576";
   remove_line /tmp/anykernel/ramdisk/unpack/init.common.rc "write /sys/power/pm_freeze_timeout 2000";
 # Mark Ramdisk As Modified & Finish
-  echo "$RMD_VERSION" > /tmp/anykernel/ramdisk/unpack/modified_version;
+  echo "$RMD_VERSION" > /tmp/anykernel/ramdisk/unpack/ramdisk_version;
 }
 
 # Update modified files
@@ -114,7 +115,7 @@ update_ramdisk_mods() {
 # Copy Modified Files
   cp -prf /tmp/anykernel/ramdisk/mods/. /tmp/anykernel/ramdisk/unpack/;
 # Mark Ramdisk As Modified & Finish
-  echo "$RMD_VERSION" > /tmp/anykernel/ramdisk/unpack/modified_version;
+  echo "$RMD_VERSION" > /tmp/anykernel/ramdisk/unpack/ramdisk_version;
 }
 
 # End Methods
@@ -124,9 +125,9 @@ update_ramdisk_mods() {
 mkdir -p /tmp/anykernel/ramdisk/unpack;
 cd /tmp/anykernel/ramdisk/unpack;
 gunzip -c /tmp/anykernel/initramfs.cpio.gz | cpio -idvm;
-if [[ -z "$(cat /tmp/anykernel/ramdisk/unpack/modified_version)" ]]; then
+if [[ -z "$(cat /tmp/anykernel/ramdisk/unpack/ramdisk_version)" ]] || [[ -f /tmp/anykernel/ramdisk/unpack/modified_version ]]; then
   run_ramdisk_mods;
-elif [[ "$(cat /tmp/anykernel/ramdisk/unpack/modified_version)" -lt "$RMD_VERSION" ]]; then
+elif [[ "$(cat /tmp/anykernel/ramdisk/unpack/ramdisk_version)" -lt "$RMD_VERSION" ]]; then
   update_ramdisk_mods;
 else
   cd /tmp/anykernel;
