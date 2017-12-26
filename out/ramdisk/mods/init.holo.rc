@@ -7,5 +7,12 @@ on boot
 	write /proc/sys/net/core/wmem_max 2621440
 	write /sys/power/pm_freeze_timeout 1750
 
+# Buildprop Tweaks
+
+	setprop wifi.supplicant_scan_interval 180
+	setprop ro.ril.power_collapse 1
+	setprop ro.ril.disable.power.collapse 0
+	setprop ro.ril.sensor.sleep.control 1
+
 # rmem_default set to 1.25M, rmem_max set to 2.5M
 # This was added by Holo
