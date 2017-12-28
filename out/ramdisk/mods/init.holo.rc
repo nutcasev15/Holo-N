@@ -12,7 +12,7 @@ on boot
 	setprop wifi.supplicant_scan_interval 180
 	setprop ro.ril.power_collapse 1
 	setprop ro.ril.disable.power.collapse 0
-	setprop ro.ril.sensor.sleep.control 1
+	setprop pm.sleep_mode 1
 
 # rmem_default set to 1.25M, rmem_max set to 2.5M
 # This was added by Holo
