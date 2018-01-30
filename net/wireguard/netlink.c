@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0
  *
- * Copyright (C) 2015-2017 Jason A. Donenfeld <Jason@zx2c4.com>. All Rights Reserved.
+ * Copyright (C) 2015-2018 Jason A. Donenfeld <Jason@zx2c4.com>. All Rights Reserved.
  */
 
 #include "netlink.h"
@@ -468,7 +468,12 @@ out_nodev:
 	return ret;
 }
 
-static const struct genl_ops genl_ops[] = {
+#ifndef COMPAT_CANNOT_USE_CONST_GENL_OPS
+static const
+#else
+static
+#endif
+struct genl_ops genl_ops[] = {
 	{
 		.cmd = WG_CMD_GET_DEVICE,
 #ifndef COMPAT_CANNOT_USE_NETLINK_START

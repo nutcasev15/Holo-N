@@ -79,6 +79,11 @@ MTU \(em if not specified, the MTU is automatically determined from the endpoint
 or the system default route, which is usually a sane choice. However, to manually specify
 an MTU to override this automatic discovery, this value may be specified explicitly.
 .IP \(bu
+Table \(em Controls the routing table to which routes are added. There are two
+special values: `off' disables the creation of routes altogether, and `auto'
+(the default) adds routes to the default table and enables special handling of
+default routes.
+.IP \(bu
 PreUp, PostUp, PreDown, PostDown \(em script snippets which will be executed by
 .BR bash (1)
 before/after setting up/tearing down the interface, most commonly used
@@ -92,7 +97,7 @@ interface upon shutdown.
 .P
 Recommended \fIINTERFACE\fP names include `wg0' or `wgvpn0' or even `wgmgmtlan0'.
 However, the number at the end is in fact optional, and really
-any free-form string [a-zA-Z0-9_=+.-]{1,16} will work. So even interface names corresponding
+any free-form string [a-zA-Z0-9_=+.-]{1,15} will work. So even interface names corresponding
 to geographic locations would suffice, such as `cincinnati', `nyc', or `paris', if that's
 somehow desirable.
 

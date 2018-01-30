@@ -1,7 +1,7 @@
 #!/bin/bash
 # SPDX-License-Identifier: GPL-2.0
 #
-# Copyright (C) 2016-2017 Jason A. Donenfeld <Jason@zx2c4.com>. All Rights Reserved.
+# Copyright (C) 2015-2018 Jason A. Donenfeld <Jason@zx2c4.com>. All Rights Reserved.
 #
 
 set -e -o pipefail
@@ -16,6 +16,7 @@ INTERFACE=""
 ADDRESSES=( )
 MTU=""
 DNS=( )
+TABLE=""
 PRE_UP=( )
 POST_UP=( )
 PRE_DOWN=( )
@@ -28,9 +29,9 @@ ARGS=( "$@" )
 parse_options() {
 	local interface_section=0 line key value
 	CONFIG_FILE="$1"
-	[[ $CONFIG_FILE =~ ^[a-zA-Z0-9_=+.-]{1,16}$ ]] && CONFIG_FILE="/etc/wireguard/$CONFIG_FILE.conf"
+	[[ $CONFIG_FILE =~ ^[a-zA-Z0-9_=+.-]{1,15}$ ]] && CONFIG_FILE="/etc/wireguard/$CONFIG_FILE.conf"
 	[[ -e $CONFIG_FILE ]] || die "\`$CONFIG_FILE' does not exist"
-	[[ $CONFIG_FILE =~ /?([a-zA-Z0-9_=+.-]{1,16})\.conf$ ]] || die "The config file must be a valid interface name, followed by .conf"
+	[[ $CONFIG_FILE =~ /?([a-zA-Z0-9_=+.-]{1,15})\.conf$ ]] || die "The config file must be a valid interface name, followed by .conf"
 	CONFIG_FILE="$(readlink -f "$CONFIG_FILE")"
 	((($(stat -c '0%#a' "$CONFIG_FILE") & $(stat -c '0%#a' "${CONFIG_FILE%/*}") & 0007) == 0)) || echo "Warning: \`$CONFIG_FILE' is world accessible" >&2
 	INTERFACE="${BASH_REMATCH[1]}"
@@ -45,6 +46,7 @@ parse_options() {
 			Address) ADDRESSES+=( ${value//,/ } ); continue ;;
 			MTU) MTU="$value"; continue ;;
 			DNS) DNS+=( ${value//,/ } ); continue ;;
+			Table) TABLE="$value"; continue ;;
 			PreUp) PRE_UP+=( "$value" ); continue ;;
 			PreDown) PRE_DOWN+=( "$value" ); continue ;;
 			PostUp) POST_UP+=( "$value" ); continue ;;
@@ -146,10 +148,14 @@ unset_dns() {
 }
 
 add_route() {
-	if [[ $1 == 0.0.0.0/0 || $1 =~ ^[0:]+/0$ ]]; then
+	[[ $TABLE != off ]] || return 0
+
+	if [[ -n $TABLE && $TABLE != auto ]]; then
+		cmd ip route add "$1" dev "$INTERFACE" table "$TABLE"
+	elif [[ $1 == */0 ]]; then
 		add_default "$1"
 	else
-		cmd ip route add "$1" dev "$INTERFACE"
+		[[ $(ip route get "$i" 2>/dev/null) == *dev\ $INTERFACE\ * ]] || cmd ip route add "$1" dev "$INTERFACE"
 	fi
 }
 
@@ -189,6 +195,7 @@ save_config() {
 		[[ $address =~ ^nameserver\ ([a-zA-Z0-9_=+:%.-]+)$ ]] && new_config+="DNS = ${BASH_REMATCH[1]}"$'\n'
 	done < <(resolvconf -l "tun.$INTERFACE" 2>/dev/null)
 	[[ -n $MTU && $(ip link show dev "$INTERFACE") =~ mtu\ ([0-9]+) ]] && new_config+="MTU = ${BASH_REMATCH[1]}"$'\n'
+	[[ -n $TABLE ]] && new_config+="Table = $TABLE"$'\n'
 	[[ $SAVE_CONFIG -eq 0 ]] || new_config+=$'SaveConfig = true\n'
 	for cmd in "${PRE_UP[@]}"; do
 		new_config+="PreUp = $cmd"$'\n'
@@ -236,6 +243,9 @@ cmd_usage() {
 	    IP addresses (with an optional CIDR mask) to be set for the interface.
 	  - DNS: an optional DNS server to use while the device is up.
 	  - MTU: an optional MTU for the interface; if unspecified, auto-calculated.
+	  - Table: an optional routing table to which routes will be added; if
+	    unspecified or \`auto', the default table is used. If \`off', no routes
+	    are added.
 	  - PreUp, PostUp, PreDown, PostDown: script snippets which will be executed
 	    by bash(1) at the corresponding phases of the link, most commonly used
 	    to configure DNS. The string \`%i' is expanded to INTERFACE.
@@ -260,7 +270,7 @@ cmd_up() {
 	up_if
 	set_dns
 	for i in $(while read -r _ i; do for i in $i; do [[ $i =~ ^[0-9a-z:.]+/[0-9]+$ ]] && echo "$i"; done; done < <(wg show "$INTERFACE" allowed-ips) | sort -nr -k 2 -t /); do
-		[[ $(ip route get "$i" 2>/dev/null) == *dev\ $INTERFACE\ * ]] || add_route "$i"
+		add_route "$i"
 	done
 	execute_hooks "${POST_UP[@]}"
 	trap - INT TERM EXIT
