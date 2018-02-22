@@ -96,7 +96,7 @@ static void interactive_resume(struct early_suspend *h)
 }
 
 static struct early_suspend screen_state __refdata = {
-	.level = EARLY_SUSPEND_LEVEL_STOP_DRAWING + 1,
+	.level = EARLY_SUSPEND_LEVEL_BLANK_SCREEN + 1,
 	.suspend = interactive_suspend,
 	.resume = interactive_resume,
 };
