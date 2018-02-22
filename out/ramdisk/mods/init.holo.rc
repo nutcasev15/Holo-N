@@ -18,7 +18,7 @@ on boot
 	write /proc/sys/vm/dirty_ratio 5
 	write /proc/sys/vm/dirty_background_ratio 2
 	write /proc/sys/vm/dirty_expire_centisecs 600
-	write /proc/sys/vm/dirty_writeback_centisecs 1200
+	write /proc/sys/vm/dirty_writeback_centisecs 120
 	write /proc/sys/vm/overcommit_memory 0
 
 # This was added by Holo
