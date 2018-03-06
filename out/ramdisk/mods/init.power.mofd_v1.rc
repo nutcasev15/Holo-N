@@ -13,8 +13,8 @@ on property:sys.boot_completed=1
 	write /sys/devices/system/cpu/cpu1/cpufreq/scaling_governor ondemand
 	write /sys/devices/system/cpu/cpu2/cpufreq/scaling_governor ondemand
 	write /sys/devices/system/cpu/cpu3/cpufreq/scaling_governor ondemand
-	write /sys/devices/system/cpu/cpufreq/ondemand/sampling_rate 33000
-	write /sys/devices/system/cpu/cpufreq/ondemand/powersave_bias 75
+	write /sys/devices/system/cpu/cpufreq/ondemand/sampling_rate 27000
+	write /sys/devices/system/cpu/cpufreq/ondemand/powersave_bias 5
 	write /sys/devices/system/cpu/cpufreq/ondemand/ignore_nice_load 1
 	setprop sys.perf.profile.governor ondemand
 
