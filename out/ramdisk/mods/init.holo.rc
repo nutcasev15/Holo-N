@@ -12,6 +12,7 @@ on boot
 	setprop ro.ril.power_collapse 1
 	setprop ro.ril.disable.power.collapse 0
 	setprop pm.sleep_mode 1
+	setprop ro.sys.fw.bg_apps 25
 
 # Virtual Memory Tweaks
 
