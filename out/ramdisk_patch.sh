@@ -2,7 +2,7 @@
 # /sbin/sh
 
 # Date Convention is Followed for Releases
-RMD_VERSION=20180310;
+RMD_VERSION=20180312;
 
 # Define Methods
 
@@ -93,25 +93,8 @@ replace_file() {
   chmod $2 $1;
 }
 
-# Set of modifications to ramdisk
-run_ramdisk_mods() {
-# Remove Files
-  rm -f /tmp/anykernel/ramdisk/unpack/init.power.mofd_v1.rc;
-  rm -f /tmp/anykernel/ramdisk/unpack/modified_version;
-# Copy Modified Files
-  cp -prf /tmp/anykernel/ramdisk/mods/. /tmp/anykernel/ramdisk/unpack/;
-# Perform Other Modifications
-  remove_line /tmp/anykernel/ramdisk/unpack/init.common.rc "write /sys/block/mmcblk0/queue/nr_requests 32";
-  remove_line /tmp/anykernel/ramdisk/unpack/init.common.rc "write /proc/sys/net/core/rmem_default 1048576";
-  remove_line /tmp/anykernel/ramdisk/unpack/init.common.rc "write /proc/sys/net/core/rmem_max 2097152";
-  remove_line /tmp/anykernel/ramdisk/unpack/init.common.rc "write /proc/sys/net/core/wmem_max 1048576";
-  remove_line /tmp/anykernel/ramdisk/unpack/init.common.rc "write /sys/power/pm_freeze_timeout 2000";
-# Mark Ramdisk As Modified & Finish
-  echo "$RMD_VERSION" > /tmp/anykernel/ramdisk/unpack/ramdisk_version;
-}
-
-# Update modified files
-update_ramdisk_mods() {
+# Update Ramdisk Files
+update_ramdisk_files() {
 # Copy Modified Files
   cp -prf /tmp/anykernel/ramdisk/mods/. /tmp/anykernel/ramdisk/unpack/;
 # Mark Ramdisk As Modified & Finish
@@ -125,10 +108,8 @@ update_ramdisk_mods() {
 mkdir -p /tmp/anykernel/ramdisk/unpack;
 cd /tmp/anykernel/ramdisk/unpack;
 gunzip -c /tmp/anykernel/initramfs.cpio.gz | cpio -idvm;
-if [[ -z "$(cat /tmp/anykernel/ramdisk/unpack/ramdisk_version)" ]] || [[ -f /tmp/anykernel/ramdisk/unpack/modified_version ]]; then
-  run_ramdisk_mods;
-elif [[ "$(cat /tmp/anykernel/ramdisk/unpack/ramdisk_version)" -lt "$RMD_VERSION" ]]; then
-  update_ramdisk_mods;
+if [[ "$(cat /tmp/anykernel/ramdisk/unpack/ramdisk_version)" -lt "$RMD_VERSION" ]] || [[ -f /tmp/anykernel/ramdisk/unpack/modified_version ]]; then
+  update_ramdisk_files;
 else
   cd /tmp/anykernel;
   rm -rf /tmp/anykernel/ramdisk/unpack;
