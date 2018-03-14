@@ -13,6 +13,8 @@ on property:sys.boot_completed=1
 	setprop ro.ril.disable.power.collapse 0
 	setprop pm.sleep_mode 1
 	setprop ro.sys.fw.bg_apps 25
+	setprop ro.sys.fw.use_trim_settings "true"
+	setprop ro.sys.fw.trim_enable_memory 8589934592
 
 # Virtual Memory Tweaks
 
