@@ -33,36 +33,30 @@ echo "Checking for Previous Compiled Files"
 if [ -e "arch/x86/kernel/asm-offsets.s" ];
 then
 	echo "Cleaning Out Compiled Files"
-    if [[ "$(git -C ./ rev-parse)" != "" ]];
-    then
+	if [[ "$(git -C ./ rev-parse)" != "" ]];
+	then
 	    make clean
-    else
-        git clean -fXq
-    fi
+	else
+		git clean -fXq
+	fi
 	sleep 1
 	rm -f .config*old
-    if [ -f log_*.log ];
-    then
+	if [ -f log_*.log ];
+	then
 	    echo "Build Logs Will Be Deleted"
 	    sleep 3
 	    rm -f log*.log
-    else
+	else
 	    printf "All Files Cleared\n"
-    fi
+	fi
 fi
 printf "#### Enviroment Setup Complete ####\n\n"
 sleep 2
 echo "#### Building ####"
 sleep $SLEEP
 echo "Compiling From $DEFCONFIG"
-if [[ "$logs" > 0 ]];
-then
-	make $DEFCONFIG $EV -j24 2>&1 | tee log_"$start".log
-else
-	make $DEFCONFIG $EV -j24
-fi
-#
-if [[ "$logs" > 0 ]];
+make $DEFCONFIG $EV
+if [[ "$logs" -gt "0" ]];
 then
 	make $EV -j24 2>&1 | tee log_"$start".log
 else
