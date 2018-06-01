@@ -3,7 +3,7 @@
 # x86 Platform-Specific Drivers
 #
 CFLAGS_intel_scu_fw_update.o := -Werror
-CFLAGS_intel_scu_ipcutil.o := -Werror
+CFLAGS_intel_scu_ipcutil.o := -Werror -Wno-unused-function
 CFLAGS_intel_modem_nvram.o := -Werror
 
 obj-$(CONFIG_ASUS_LAPTOP)	+= asus-laptop.o
