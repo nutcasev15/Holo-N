@@ -281,7 +281,7 @@ void dwc3_gadget_giveback(struct dwc3_ep *dep, struct dwc3_request *req,
 	if (dwc->ep0_bounced && dep->number <= 1) {
 		dwc->ep0_bounced = false;
 		unmap_after_complete = true;
-	else if (!dep->ebc && req->roundup_size) {
+	} else if (!dep->ebc && req->roundup_size) {
 		req->request.length -= req->roundup_size;
 		req->roundup_size = 0;
 	} else {
