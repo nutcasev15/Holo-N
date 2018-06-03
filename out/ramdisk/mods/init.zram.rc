@@ -7,7 +7,10 @@ on property:ro.config.zram=true
 	swapon_all /fstab.mofd_v1
 	# Tell Android We Have Low RAM
 	setprop ro.config.low_ram "true"
-    # Configure ZRAM Further
+	# Configure UKSM
+	write /sys/kernel/mm/uksm/run 1
+	write /sys/kernel/mm/uksm/cpu_governor "quiet"
+	# Configure ZRAM Further
 	write /sys/devices/virtual/block/zram0/max_comp_streams 2
 	write /sys/devices/virtual/block/zram0/disksize 536870912
 
