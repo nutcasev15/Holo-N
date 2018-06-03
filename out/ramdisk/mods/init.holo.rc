@@ -23,5 +23,6 @@ on property:sys.boot_completed=1
 	write /proc/sys/vm/dirty_expire_centisecs 900
 	write /proc/sys/vm/dirty_writeback_centisecs 180
 	write /proc/sys/vm/overcommit_memory 0
+	write /proc/sys/vm/swappiness 1
 
 # This was added by Holo

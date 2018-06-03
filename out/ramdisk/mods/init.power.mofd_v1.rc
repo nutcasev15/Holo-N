@@ -1,7 +1,6 @@
 import /init.holo.rc
 
 on early-init
-	write /proc/sys/vm/swappiness 1
 	write /sys/devices/platform/dfrgx/devfreq/dfrgx/governor performance
 	write /sys/devices/platform/dfrgx/devfreq/dfrgx/min_freq 457000
 	setprop sys.io.scheduler cfq
