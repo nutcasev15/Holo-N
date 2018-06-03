@@ -120,6 +120,7 @@ static netdev_tx_t xmit(struct sk_buff *skb, struct net_device *dev)
 	struct sk_buff *next;
 	struct sk_buff_head packets;
 	sa_family_t family;
+	u32 mtu;
 	int ret;
 
 	if (unlikely(skb_examine_untrusted_ip_hdr(skb) != skb->protocol)) {
@@ -141,6 +142,8 @@ static netdev_tx_t xmit(struct sk_buff *skb, struct net_device *dev)
 		net_dbg_ratelimited("%s: No valid endpoint has been configured or discovered for peer %llu\n", dev->name, peer->internal_id);
 		goto err_peer;
 	}
+
+	mtu = skb_dst(skb) ? dst_mtu(skb_dst(skb)) : dev->mtu;
 
 	__skb_queue_head_init(&packets);
 	if (!skb_is_gso(skb))
@@ -167,6 +170,8 @@ static netdev_tx_t xmit(struct sk_buff *skb, struct net_device *dev)
 		 * so at this point we're in a position to drop it.
 		 */
 		skb_dst_drop(skb);
+
+		PACKET_CB(skb)->mtu = mtu;
 
 		__skb_queue_tail(&packets, skb);
 	} while ((skb = next) != NULL);
@@ -214,6 +219,7 @@ static void destruct(struct net_device *dev)
 	mutex_lock(&wg->device_update_lock);
 	wg->incoming_port = 0;
 	socket_reinit(wg, NULL, NULL);
+	allowedips_free(&wg->peer_allowedips, &wg->device_update_lock);
 	peer_remove_all(wg); /* The final references are cleared in the below calls to destroy_workqueue. */
 	destroy_workqueue(wg->handshake_receive_wq);
 	destroy_workqueue(wg->handshake_send_wq);
@@ -221,7 +227,6 @@ static void destruct(struct net_device *dev)
 	packet_queue_free(&wg->encrypt_queue, true);
 	destroy_workqueue(wg->packet_crypt_wq);
 	rcu_barrier_bh(); /* Wait for all the peers to be actually freed. */
-	allowedips_free(&wg->peer_allowedips, &wg->device_update_lock);
 	ratelimiter_uninit();
 	memzero_explicit(&wg->static_identity, sizeof(struct noise_static_identity));
 	skb_queue_purge(&wg->incoming_handshakes);

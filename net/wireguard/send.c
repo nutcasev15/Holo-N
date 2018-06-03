@@ -36,6 +36,7 @@ static void packet_send_handshake_initiation(struct wireguard_peer *peer)
 	if (noise_handshake_create_initiation(&packet, &peer->handshake)) {
 		cookie_add_mac_to_packet(&packet, sizeof(packet), peer);
 		timers_any_authenticated_packet_traversal(peer);
+		timers_any_authenticated_packet_sent(peer);
 		socket_send_buffer_to_peer(peer, &packet, sizeof(struct message_handshake_initiation), HANDSHAKE_DSCP);
 		timers_handshake_initiated(peer);
 	}
@@ -78,6 +79,7 @@ void packet_send_handshake_response(struct wireguard_peer *peer)
 		if (noise_handshake_begin_session(&peer->handshake, &peer->keypairs)) {
 			timers_session_derived(peer);
 			timers_any_authenticated_packet_traversal(peer);
+			timers_any_authenticated_packet_sent(peer);
 			socket_send_buffer_to_peer(peer, &packet, sizeof(struct message_handshake_response), HANDSHAKE_DSCP);
 		}
 	}
@@ -112,15 +114,14 @@ static inline void keep_key_fresh(struct wireguard_peer *peer)
 static inline unsigned int skb_padding(struct sk_buff *skb)
 {
 	/* We do this modulo business with the MTU, just in case the networking layer
-	 * gives us a packet that's bigger than the MTU. Since we support GSO, this
-	 * isn't strictly neccessary, but it's better to be cautious here, especially
-	 * if that code ever changes.
+	 * gives us a packet that's bigger than the MTU. In that case, we wouldn't want
+	 * the final subtraction to overflow in the case of the padded_size being clamped.
 	 */
-	unsigned int last_unit = skb->len % skb->dev->mtu;
-	unsigned int padded_size = (last_unit + MESSAGE_PADDING_MULTIPLE - 1) & ~(MESSAGE_PADDING_MULTIPLE - 1);
+	unsigned int last_unit = skb->len % PACKET_CB(skb)->mtu;
+	unsigned int padded_size = ALIGN(last_unit, MESSAGE_PADDING_MULTIPLE);
 
-	if (padded_size > skb->dev->mtu)
-		padded_size = skb->dev->mtu;
+	if (padded_size > PACKET_CB(skb)->mtu)
+		padded_size = PACKET_CB(skb)->mtu;
 	return padded_size - last_unit;
 }
 
@@ -178,6 +179,7 @@ void packet_send_keepalive(struct wireguard_peer *peer)
 			return;
 		skb_reserve(skb, DATA_PACKET_HEAD_ROOM);
 		skb->dev = peer->device->dev;
+		PACKET_CB(skb)->mtu = skb->dev->mtu;
 		skb_queue_tail(&peer->staged_packet_queue, skb);
 		net_dbg_ratelimited("%s: Sending keepalive packet to peer %llu (%pISpfsc)\n", peer->device->dev->name, peer->internal_id, &peer->endpoint.addr);
 	}
@@ -200,6 +202,7 @@ static void packet_create_data_done(struct sk_buff *first, struct wireguard_peer
 	bool is_keepalive, data_sent = false;
 
 	timers_any_authenticated_packet_traversal(peer);
+	timers_any_authenticated_packet_sent(peer);
 	skb_walk_null_queue_safe(first, skb, next) {
 		is_keepalive = skb->len == message_data_len(0);
 		if (likely(!socket_send_skb_to_peer(peer, skb, PACKET_CB(skb)->ds) && !is_keepalive))
