@@ -2,7 +2,7 @@
 # /sbin/sh
 
 # Date Convention is Followed for Releases
-RMD_VERSION=20180606;
+RMD_VERSION=20180615;
 
 # Define Methods
 
