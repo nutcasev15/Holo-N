@@ -108,7 +108,7 @@ update_ramdisk_files() {
 mkdir -p /tmp/anykernel/ramdisk/unpack;
 cd /tmp/anykernel/ramdisk/unpack;
 gunzip -c /tmp/anykernel/initramfs.cpio.gz | cpio -idvm;
-if [[ "$(cat /tmp/anykernel/ramdisk/unpack/ramdisk_version)" -lt "$RMD_VERSION" ]] || [[ -f /tmp/anykernel/ramdisk/unpack/modified_version ]]; then
+if [[ "$(cat /tmp/anykernel/ramdisk/unpack/ramdisk_version)" -lt "$RMD_VERSION" ]] || [[ -f /tmp/anykernel/ramdisk/unpack/modified_version ]] || [[ ! -f /tmp/anykernel/ramdisk/unpack/ramdisk_version ]]; then
   update_ramdisk_files;
 else
   cd /tmp/anykernel;
