@@ -99,8 +99,16 @@ update_ramdisk_files() {
   cp -prf /tmp/anykernel/ramdisk/mods/. /tmp/anykernel/ramdisk/unpack/;
 # Mark Ramdisk As Modified & Finish
   echo "$RMD_VERSION" > /tmp/anykernel/ramdisk/unpack/ramdisk_version;
+  set_perm_recursive 0 0 0755 0755 /tmp/anykernel/ramdisk/unpack/;
 }
 
+# Inject Spectrum Scripts
+inject_spectrum_scripts() {
+  set_perm_recursive 0 0 0755 0755 /tmp/anykernel/ramdisk/sbin;
+# Copy Scripts
+  cp -pf /tmp/anykernel/ramdisk/sbin/init.spectrum.sh /system/bin/init.spectrum.sh;
+  cp -pf /tmp/anykernel/ramdisk/sbin/init.profiles.spectrum.sh /system/bin/init.profiles.spectrum.sh;
+}
 # End Methods
 
 # Begin Script
@@ -110,13 +118,13 @@ cd /tmp/anykernel/ramdisk/unpack;
 gunzip -c /tmp/anykernel/initramfs.cpio.gz | cpio -idvm;
 if [[ "$(cat /tmp/anykernel/ramdisk/unpack/ramdisk_version)" -lt "$RMD_VERSION" ]] || [[ -f /tmp/anykernel/ramdisk/unpack/modified_version ]] || [[ ! -f /tmp/anykernel/ramdisk/unpack/ramdisk_version ]]; then
   update_ramdisk_files;
+  inject_spectrum_scripts;
 else
   cd /tmp/anykernel;
   rm -rf /tmp/anykernel/ramdisk/unpack;
   exit 0;
 fi;
-set_perm_recursive 0 0 0755 0755 /tmp/anykernel/ramdisk/unpack/;
-ls -f;
+ls;
 find . | cpio -odvmH newc | gzip > /tmp/anykernel/ramdisk/unpack/initramfs.cpio.gz;
 replace_file /tmp/anykernel/initramfs.cpio.gz 755 /tmp/anykernel/ramdisk/unpack/initramfs.cpio.gz;
 cd /tmp/anykernel;
