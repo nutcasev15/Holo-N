@@ -1301,9 +1301,7 @@ clock_set:
 			return;
 		}
 		timeout--;
-		spin_unlock_irq(&host->lock);
-		usleep_range(9, 11);
-		spin_lock_irq(&host->lock);
+		udelay(10);
 	}
 
 	clk |= SDHCI_CLOCK_CARD_EN;
