@@ -8,20 +8,14 @@ on property:sys.boot_completed=1
 
 # Buildprop Tweaks
 
-	setprop wifi.supplicant_scan_interval 180
+	setprop wifi.supplicant_scan_interval 240
 	setprop ro.ril.power_collapse 1
-	setprop ro.ril.disable.power.collapse 0
 	setprop pm.sleep_mode 1
-	setprop ro.sys.fw.bg_apps 25
-	setprop ro.sys.fw.use_trim_settings "true"
-	setprop ro.sys.fw.trim_enable_memory 8589934592
 
 # Virtual Memory Tweaks
 
-	write /proc/sys/vm/dirty_ratio 7
-	write /proc/sys/vm/dirty_background_ratio 3
-	write /proc/sys/vm/dirty_expire_centisecs 900
-	write /proc/sys/vm/dirty_writeback_centisecs 180
+	write /proc/sys/vm/dirty_ratio 10
+	write /proc/sys/vm/dirty_background_ratio 5
 	write /proc/sys/vm/overcommit_memory 0
 	write /proc/sys/vm/swappiness 1
 
